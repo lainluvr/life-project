@@ -1655,6 +1655,18 @@ function devName(){ let d = lsGet(SK_DEV); if(!d){ d = (/iPhone|iPad|Android/i.t
 function syncSubset(){ const o = {}; for(const k of Object.keys(S)) if(!SYNC_LOCAL.includes(k)) o[k] = S[k]; return o; }
 const syncJson = () => JSON.stringify(syncSubset());
 const syncDirty = () => syncJson() !== lsGet(SK_SNAP);
+function dataScore(s){
+  let n = 0; const c = o => o ? Object.keys(o).length : 0;
+  for(const d in s.tlog||{}) n += (s.tlog[d]||[]).filter(Boolean).length;
+  for(const d in s.food||{}) n += (s.food[d]||[]).length;
+  for(const k in s.rdone||{}) n += (s.rdone[k]||[]).length;
+  n += (s.hurdles||[]).length + (s.routines||[]).length + ((s.learn||{}).log||[]).length + ((s.learn||{}).skills||[]).length + c(s.reviews) + c(s.mlog);
+  return n;
+}
+// [have, would have] when replacing `from` with `to` throws away most of it
+const bigLoss = (from, to) => { const a = dataScore(from), b = dataScore(to); return a>=20 && b < a*0.5 ? [a, b] : null; };
+const lossWarn = (L, what) => `⚠️ Careful: ${what} has much less in it than you'd be replacing (about ${L[1]} things instead of ${L[0]}).\n\nThis can happen when a new or empty device syncs first.`;
+function syncPause(msg){ syncStop(); syncState = "paused"; syncMsg = msg; renderSync(); }
 const bytesEq = (a, b) => a && b && a.length===b.length && a.every((x,i)=>x===b[i]);
 
 // --- locking and unlocking
@@ -1732,18 +1744,32 @@ async function syncOnRemote(snap){
   if(p.v > DATA_V){ syncState = "error"; syncMsg = "Your other device has a newer version of the app. Reload this page to get it, then sync works again."; syncStop(); return renderSync(); }
   if(!base){
     // first sync on this device
-    if(confirm("Your synced data was found.\n\nLoad it onto this device? It replaces what's on this device right now.")) return syncApply(p, d.t);
-    if(confirm("Upload THIS device's data instead? It replaces the synced copy, and your other devices will get this device's data.")) return syncPush(true);
-    return syncLock("Nothing was changed. Enter your passphrase again when you're ready to choose.");
+    if(confirm("Your synced data was found.\n\nLoad it onto this device? It replaces what's on this device right now.")){
+      const L = bigLoss(S, p);
+      if(L && !confirm(lossWarn(L, "the synced copy") + "\n\nOK: load it anyway (this device's data is kept, and Undo last sync brings it back).\nCancel: change nothing and pause sync here.")) return syncPause("Sync paused. Nothing was changed on this device.");
+      return syncApply(p, d.t);
+    }
+    if(confirm("Upload THIS device's data instead? It replaces the synced copy, and your other devices will get this device's data.")){
+      const L = bigLoss(p, S);
+      if(L && !confirm(lossWarn(L, "this device") + " Your other devices would get this smaller copy.\n\nOK: upload it anyway.\nCancel: change nothing and pause sync here.")) return syncPause("Sync paused. Nothing was uploaded.");
+      return syncPush(true);
+    }
+    return syncPause("Sync paused. Nothing was changed.");
   }
   if(syncDirty()){
     // both devices changed things since they last synced
-    if(!confirm("This device and your other device both changed things since they last synced.\n\nOK: use the OTHER device's version (this device's recent changes are kept as a backup copy on this device).\nCancel: keep THIS device's version and upload it.")) return syncPush(true);
-    lsSet(SK_BEFORE, JSON.stringify(S));
+    if(!confirm("This device and your other device both changed things since they last synced.\n\nOK: use the OTHER device's version (this device's version is kept, and Undo last sync brings it back).\nCancel: keep THIS device's version and upload it.")){
+      const L = bigLoss(p, S);
+      if(L && !confirm(lossWarn(L, "this device") + "\n\nOK: upload it anyway.\nCancel: change nothing and pause sync here.")) return syncPause("Sync paused. Nothing was uploaded.");
+      return syncPush(true);
+    }
   }
+  const L = bigLoss(S, p);
+  if(L && !confirm(lossWarn(L, "the copy from your other device") + "\n\nOK: use it anyway (this device's data is kept, and Undo last sync brings it back).\nCancel: change nothing and pause sync here.")) return syncPause("Sync paused. Nothing was changed on this device.");
   syncApply(p, d.t);
 }
 function syncApply(p, t){
+  lsSet(SK_BEFORE, JSON.stringify(S));
   const keep = {}; for(const k of SYNC_LOCAL) if(k in S) keep[k] = S[k];
   S = Object.assign(migrate(p), keep);
   syncApplying = true; save(); syncApplying = false;
@@ -1806,11 +1832,11 @@ async function syncNewPass(pass){
 function renderSync(){
   const st = $("syncStatus"), body = $("syncBody"); if(!st) return;
   const when = syncLastOk ? new Date(syncLastOk).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}) : "";
-  st.className = syncState==="on" && !syncMsg ? "ok" : syncState==="error" || (syncMsg && syncState==="on") ? "warn" : "";
+  st.className = syncState==="on" && !syncMsg ? "ok" : syncState==="error" || syncState==="paused" || (syncMsg && syncState==="on") ? "warn" : "";
   st.textContent = syncMsg || ({off:"Not set up in this copy of the app yet.", loading:"Loading…", out:"Signed out. Your data stays on this device.",
     locked: fbUser ? `Signed in as ${fbUser.email}. Enter your passphrase to start syncing.` : "", newpass:"",
-    on:`✓ Syncing as ${fbUser && fbUser.email}${when ? ` · last synced ${when}` : ""}`, error:""})[syncState] || "";
-  const want = syncState + "|" + syncHasVault;
+    on:`✓ Syncing as ${fbUser && fbUser.email}${when ? ` · last synced ${when}` : ""}`, paused:"", error:""})[syncState] || "";
+  const want = syncState + "|" + syncHasVault + "|" + !!lsGet(SK_BEFORE);
   if(want===syncBodyFor) return;
   syncBodyFor = want;
   const pw = (id, ph, ac) => `<input type="password" id="${id}" placeholder="${ph}" autocomplete="${ac}" maxlength="200">`;
@@ -1837,7 +1863,10 @@ function renderSync(){
         <label>New passphrase${pw("syncNew1","4 or 5 random words","new-password")}</label>
         <label>Type it again${pw("syncNew2","same again","new-password")}</label>
         <div class="row"><button class="btn primary">Save new passphrase</button><button type="button" class="btn" data-act="syncNewCancel">Cancel</button></div></form>`,
-    on:`<div class="row"><button class="btn" data-act="syncNow">Sync now</button><button class="btn" data-act="syncNewPassForm">Change passphrase</button><button class="btn" data-act="syncOut">Sign out</button></div>`
+    paused:`<p class="sub" style="margin:6px 0 0">Nothing syncs on this device until you resume. Resuming asks again whether to load the synced copy or upload this device's data.</p>
+      <div class="row"><button class="btn primary" data-act="syncResume">Resume sync</button><button class="btn" data-act="syncOut">Sign out</button></div>`,
+    on:`<div class="row"><button class="btn" data-act="syncNow">Sync now</button><button class="btn" data-act="syncNewPassForm">Change passphrase</button><button class="btn" data-act="syncOut">Sign out</button></div>
+      ${lsGet(SK_BEFORE) ? `<small class="sub" style="display:block;margin-top:8px">Did a sync replace something it shouldn't have? <button class="linkbtn" data-act="syncUndo">Undo last sync</button> puts back what this device had just before it.</small>` : ""}`
   }[syncState] || "";
 }
 document.addEventListener("submit", async e=>{
@@ -3584,6 +3613,13 @@ document.addEventListener("click", e=>{
       fb.auth.sendPasswordResetEmail(fb.A, em).then(()=>{ syncMsg = `If there's an account for ${em}, a reset email is on its way.`; renderSync(); }).catch(err=>{ syncMsg = authMsg(err); renderSync(); }); break; }
     case "syncOut": if(confirm("Sign out of sync on this device? Everything stays on this device; it just stops syncing.")){
       syncStop(); syncKey = null; idbPutK("skey", null); lsSet(SK_BASE, null); syncMsg = ""; fb.auth.signOut(fb.A); } break;
+    case "syncResume": lsSet(SK_BASE, null); syncState = "on"; syncMsg = ""; renderSync(); syncStart(); break;
+    case "syncUndo": { const raw = lsGet(SK_BEFORE); if(!raw) break;
+      if(!confirm("Put back what this device had just before the last sync replaced it? That version then syncs to your other devices too.")) break;
+      try{ const keep = {}; for(const k of SYNC_LOCAL) if(k in S) keep[k] = S[k];
+        S = Object.assign(migrate(JSON.parse(raw)), keep); lsSet(SK_BEFORE, null); save(); renderAll(); syncBodyFor = ""; renderSync(); toast("↩️ Put back. It syncs to your other devices in a few seconds."); }
+      catch(e){ toast("Couldn't undo: that saved copy is damaged."); }
+      break; }
     case "syncNow": if(syncDirty()) syncPush(false); else { syncLastOk = Date.now(); renderSync(); toast("✓ Already up to date."); } break;
     case "syncNewPassForm": syncState = "newpass"; syncMsg = ""; renderSync(); break;
     case "syncNewCancel": syncState = syncKey ? "on" : "locked"; syncMsg = ""; renderSync(); break;
