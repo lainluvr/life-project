@@ -1280,7 +1280,7 @@ function CAT_SEED(){
     C("🎮","Fun on purpose","life","#e3a92b","mental")
   ];
 }
-const DATA_V = 19;
+const DATA_V = 20;
 function defaults(){
   return {
     v:DATA_V, totalXp:0, maxLevel:1, best:0,
@@ -1473,6 +1473,12 @@ function migrate(p){
       s.learn = {skills:subs.map(x=>({id:x.id, name:x.name, icon:x.icon||""})), log:(L.log||[]).map(e=>({id:e.id, skill:e.subj, date:e.date, mins:e.mins||0, text:e.text||"", t:e.t||Date.now()})), summary:sum};
     }
     s.v = 19;
+  }
+  if(s.v<20){
+    // v20: a morning workout, 3 times a week
+    s.routines = s.routines || [];
+    if(!s.routines.some(r=>/morning workout/i.test(r.name))) s.routines.push({id:uid(), name:"Morning workout", icon:"💪", area:"body", week:3, every:7, times:1});
+    s.v = 20;
   }
   return s;
 }
