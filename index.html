@@ -536,7 +536,10 @@ input.emo{cursor:pointer;text-align:center;font-size:19px;padding-right:20px!imp
 #lrPasteIn{min-height:200px;resize:vertical;margin-top:10px}
 .lrrow{display:flex;gap:12px;align-items:flex-end}
 .lrrow>label{flex:1;min-width:0}
-.lrtime{display:flex;align-items:center;gap:6px} .lrtime input{flex:1} .lrtime small{color:var(--muted);font-weight:400}
+.itday{margin:6px 0 4px;line-height:1.55}
+.itday code,.wkhow code{font-size:12px;padding:1px 5px;border-radius:5px;background:var(--panel2)}
+#lrGuide small.ok{color:var(--good);font-weight:600}
+.wkt tr.on td{color:var(--accent);font-weight:700}
 .lrnote{font-weight:400;letter-spacing:0;margin-left:6px;opacity:.8}
 .lrareas{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .lrareas button{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:6px;padding:5px 10px;font:inherit;font-size:13px;cursor:pointer}
@@ -547,7 +550,6 @@ input.emo{cursor:pointer;text-align:center;font-size:19px;padding-right:20px!imp
 .lrent:last-child{border-bottom:0}
 .lrent .lrmeta{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .lrent .lrdate{font-family:var(--serif);font-weight:600;font-size:15px}
-.lrent .lrdur{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .lrent .lracts{margin-left:auto;display:flex;gap:2px}
 .lrtag{display:inline-block;font-size:11px;letter-spacing:.3px;padding:1px 7px;border-radius:4px;border:1px solid var(--line);color:var(--muted);margin:4px 4px 0 0}
 .lrent p{margin:6px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.55;font-size:14px}
@@ -630,7 +632,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
   <div class="wrap">
     <div class="brand">✨ Life Login</div>
     <div class="stats">
-      <span class="pill" title="Time spent practising skills" data-act="goto" data-tab="brain" style="cursor:pointer">📘 <b id="hBrain">0</b></span>
+      <span class="pill" title="Skill sessions logged" data-act="goto" data-tab="brain" style="cursor:pointer">📘 <b id="hBrain">0</b></span>
       <span class="pill" title="Productive hours so far">⏳ <b id="hHours">0</b></span>
       <span class="pill" title="Things on your to-do list" data-act="goto" data-tab="putoff" style="cursor:pointer">✅ <b id="hPut">0</b></span>
       <span class="pill" title="Streak: days in a row you logged something">🔥 <b id="hStreak">0</b></span>
@@ -859,13 +861,13 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
   </div>
   <div class="lrgrid" id="lrMain">
     <div>
+      <div class="card lr" id="lrGuide" hidden></div>
       <div class="card lr">
         <h3 class="lrh" id="lrFormTitle">Log a session</h3>
         <form id="lrForm">
           <label>Skill<select name="skill" id="lrSkillSel" required></select></label>
           <div class="lrrow">
             <label>Date<input type="date" name="date" required></label>
-            <label>Time spent<span class="lrtime"><input type="number" name="mins" min="0" max="1440" step="5" placeholder="45"><small>min</small></span></label>
           </div>
           <label>What I did<textarea name="text" required maxlength="5000" placeholder="e.g. Watched Professor Messer 1.2 on the OSI model. Layers 1–4 make sense now; still fuzzy on the session layer."></textarea></label>
           <div class="row"><button class="btn primary">Save session</button><button type="button" class="btn" data-act="lrCancel" id="lrCancel" hidden>Cancel edit</button></div>
@@ -1108,7 +1110,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
   <div class="card" data-sg="help">
     <h2>How it works</h2>
     <p class="sub" style="margin:0">
-      <b>📘 Skills</b>: add the skills you're learning (Networking, Cybersecurity…) and log a session for one of them whenever you practise: the date, how long, and what you did. "Your skills" ranks them by time spent; click one to see only its sessions. <b>Copy for AI</b> copies every session with instructions; paste that into Claude, then paste its answer back with <b>Paste summary</b> to keep an overview.<br><br>
+      <b>📘 Skills</b>: add the skills you're learning (Networking, Cybersecurity…) and log a session for one of them whenever you practise: the date and what you did (how long goes in the Time tab). "Your skills" ranks them by sessions; click one to see only its sessions. <b>Copy for AI</b> copies every session with instructions; paste that into Claude, then paste its answer back with <b>Paste summary</b> to keep an overview.<br><br>
       <b>⏳ Time</b>: tap or drag across half-hour blocks and write what you did, then pick a color from green (productive) to red (dead time). <b>↻ Still on it</b> fills the empty half-hours since your last block in one tap.<br><br>
       <b>✅ To do</b>: one item always sits in the bar at the top of every tab until you do it, snooze it or let it go. The bar changes its color and spot so you keep noticing it (turn that off in Settings → Look).<br><br>
       <b>🌿 Care</b>: calories, water and other trackers on the left, and one Routines list on the right (every day, a few times a week, and on a schedule, with a calendar of what's due). Each day gets two colors, one for calories and one for routines: red to green the closer you get, and purple once you hit your calorie goal or finish every routine.<br><br>
@@ -1288,7 +1290,7 @@ function CAT_SEED(){
     C("🎮","Fun on purpose","life","#e3a92b","mental")
   ];
 }
-const DATA_V = 20;
+const DATA_V = 21;
 function defaults(){
   return {
     v:DATA_V, totalXp:0, maxLevel:1, best:0,
@@ -1487,6 +1489,12 @@ function migrate(p){
     s.routines = s.routines || [];
     if(!s.routines.some(r=>/morning workout/i.test(r.name))) s.routines.push({id:uid(), name:"Morning workout", icon:"💪", area:"body", week:3, every:7, times:1});
     s.v = 20;
+  }
+  if(s.v<21){
+    // v21: a daily IT study routine, ticked off by logging an IT session in Skills
+    s.routines = s.routines || [];
+    if(!s.routines.some(r=>/^it study/i.test(r.name))) s.routines.push({id:uid(), name:"IT study", icon:"🖥️", area:"mental", every:1, times:1});
+    s.v = 21;
   }
   return s;
 }
@@ -2035,7 +2043,8 @@ let wkOpen = false;
 document.addEventListener("toggle", e => { if(e.target.id==="wkHow") wkOpen = e.target.open; }, true);
 function routineHtml(r){
   const st = rState(r), t = today(), c = rCount(r,t);
-  const how = /morning workout/i.test(r.name) ? `<details class="wkhow" id="wkHow"${wkOpen ? " open" : ""}><summary>What to do (tap to open)</summary>${WORKOUT_HOW}</details>` : "";
+  const how = /morning workout/i.test(r.name) ? `<details class="wkhow" id="wkHow"${wkOpen ? " open" : ""}><summary>What to do (tap to open)</summary>${WORKOUT_HOW}</details>`
+    : /^it study/i.test(r.name) ? `<div class="wkhow"><button class="linkbtn" data-act="goto" data-tab="brain">Open today's plan in Skills →</button> <small class="sub">Logging an IT session there ticks this off.</small></div>` : "";
   let dots = "";
   if(isDaily(r) || isWeekly(r)){
     const need = isDaily(r) ? r.times : 1;
@@ -2482,14 +2491,49 @@ function hyperTick(){
   toast(msg, true);   // on-screen pop-up only: no Windows notification, no activity-log entry
 }
 /* ---------- skills: dated practice sessions per skill, effort per skill, one AI summary ---------- */
-// S.learn = {skills:[{id, name, icon}], log:[{id, skill, date, mins, text, t}], summary:{text, t, n}|null}
+// S.learn = {skills:[{id, name, icon}], log:[{id, skill, date, text, t}], summary:{text, t, n}|null}
+// (older sessions may still carry a "mins" field; time now lives in the Time tab, so it's ignored)
 let lrEditing = null, lrFilt = "", lrAll = false, skEditing = null;
 const LR = () => S.learn || (S.learn = {skills:[], log:[], summary:null});
 const skOf = id => LR().skills.find(s=>s.id===id);
 const skName = s => `${s.icon ? s.icon + " " : ""}${s.name}`;
 const lrSessions = () => LR().log.filter(e=>skOf(e.skill)).sort((a,b)=>b.date.localeCompare(a.date) || b.t-a.t);
-const lrMins = m => !m ? "—" : m<60 ? `${m} min` : `${Math.floor(m/60)} h${m%60 ? ` ${m%60} min` : ""}`;
-const skMinsAll = () => LR().log.reduce((a,e)=>a+(e.mins||0),0);
+// IT help-desk study plan, shown on the Skills page when there's a skill called IT
+const IT_DAYS = [
+  ["Sunday", "Review and practice questions", "Do practice questions on this week's topics, re-watch anything that felt shaky, then use <b>Copy for AI</b> to refresh your overview."],
+  ["Monday", "Hardware: the parts of a PC", "CPU, RAM, storage (HDD, SSD, NVMe), motherboard, power supply, ports and cables. <i>Hands-on:</i> open <b>System Information</b> (Start → type msinfo32) and <b>Task Manager → Performance</b>, and write down your own CPU, RAM and drive."],
+  ["Tuesday", "Networking basics", "IP addresses, DNS, DHCP, Wi-Fi, common ports. <i>Hands-on:</i> in Command Prompt run <code>ipconfig /all</code>, <code>ping google.com</code> and <code>nslookup google.com</code>, and work out what each line means."],
+  ["Wednesday", "Windows", "Settings vs Control Panel, user accounts, file permissions, updates, command-line basics. <i>Hands-on:</i> open <b>Device Manager</b>, <b>Disk Management</b> and <b>Event Viewer</b>; find one warning in Event Viewer and look up what it means."],
+  ["Thursday", "Troubleshooting", "CompTIA's 6 steps: identify the problem → guess the likely cause → test it → plan and fix → check it works → write it down. <i>Hands-on:</i> pick a real annoyance on your PC or phone and walk it through the 6 steps, written like a help-desk ticket."],
+  ["Friday", "Security", "Malware types, phishing, passwords and two-factor login, backups. <i>Hands-on:</i> go through <b>Windows Security</b>, and check your main accounts have two-factor login on."],
+  ["Saturday", "Mobile devices, printers, cloud and virtual machines", "Phone settings and syncing, printer problems, cloud storage, what a virtual machine is. <i>Hands-on:</i> explore your phone's settings like a technician would (storage, battery health, network reset). Later, try a free virtual machine."]
+];
+function itGuideHtml(){
+  const sk = LR().skills.find(s=>/^\s*IT\s*$/i.test(s.name)); if(!sk) return "";
+  const dow = new Date(today()+"T12:00").getDay(), d = IT_DAYS[dow];
+  const done = lrSessions().some(e=>e.skill===sk.id && e.date===today());
+  return `<div class="cardhead"><h3 class="lrh">🖥️ Today in IT: ${d[1]}</h3>${done ? `<small class="ok">✓ logged today</small>` : ""}</div>
+    <p class="itday">${d[2]}</p>
+    <details class="wkhow" id="itHow"${itOpen ? " open" : ""}><summary>The daily routine and the full week (tap to open)</summary>
+      <p><b>Every day, about 45 minutes</b> (log the time in the Time tab):</p>
+      <p><b>1. Review, 5 min</b>: reread yesterday's log entry. What was still confusing?<br>
+      <b>2. Learn, 20 min</b>: watch today's topic in Professor Messer's free CompTIA A+ videos (YouTube or professormesser.com, search the topic).<br>
+      <b>3. Do it, 15 min</b>: the hands-on part above, on your own PC or phone.<br>
+      <b>4. Log it, 5 min</b>: below, write what you did, one thing you learned, and one thing still fuzzy.</p>
+      <table class="wkt"><tr><th>Day</th><th>Topic</th></tr>${IT_DAYS.slice(1).concat([IT_DAYS[0]]).map(x=>`<tr${x===d ? ' class="on"' : ""}><td>${x[0].slice(0,3)}</td><td>${x[1]}</td></tr>`).join("")}</table>
+      <p><b>Where it leads:</b> the <b>CompTIA A+</b> certificate, the usual first step into help desk. It's two exams: <i>Core 1</i> (hardware, networking, mobile, troubleshooting) and <i>Core 2</i> (Windows, security, software, procedures). CompTIA's free <b>exam objectives</b> list is the checklist of everything on them. Studying daily, most people are ready in about 3–4 months.</p>
+      <p><b>Already done:</b> putting this app online with GitHub and Firebase counts as real hands-on experience. Keep it for your resume.</p>
+    </details>`;
+}
+let itOpen = false;
+document.addEventListener("toggle", e => { if(e.target.id==="itHow") itOpen = e.target.open; }, true);
+// days in a row with at least one session, counting back from today (or yesterday, if today has none yet)
+function skStreak(){
+  const ds = new Set(lrSessions().map(e=>e.date)); let d = today();
+  if(!ds.has(d)) d = shiftDate(d, -1);
+  let n = 0; while(ds.has(d)){ n++; d = shiftDate(d, -1); }
+  return n;
+}
 function lrAgo(d){ const n = daysBetween(d, today()); return n<=0 ? "today" : n===1 ? "yesterday" : n<7 ? `${n} days ago` : niceDate(d); }
 // tiny markdown for the pasted summary: headings, bullets, bold
 function lrMd(txt){
@@ -2510,11 +2554,11 @@ function renderBrain(){
   $("lrMain").hidden = !has; $("lrEmpty").hidden = has; $("lrStats").hidden = !has;
   if(!has) return;
   const all = lrSessions(), t = today(), ws = weekStart(t);
-  const mins = all.reduce((a,e)=>a+(e.mins||0),0), days = new Set(all.map(e=>e.date)).size;
-  const wk = all.filter(e=>e.date>=ws && e.date<=t).reduce((a,e)=>a+(e.mins||0),0);
+  const days = new Set(all.map(e=>e.date)).size, wk = all.filter(e=>e.date>=ws && e.date<=t).length, stk = skStreak();
   const stat = (v, l) => `<div><b>${v}</b><small>${l}</small></div>`;
-  $("lrStats").innerHTML = stat(all.length, "Sessions") + stat(mins ? fmtH(mins/60) : "—", "Total time") + stat(days, "Days practised")
-    + stat(wk ? fmtH(wk/60) : "—", "This week") + stat(all.length ? lrAgo(all[0].date) : "—", "Last session");
+  $("lrStats").innerHTML = stat(all.length, "Sessions") + stat(days, "Days practised") + stat(stk ? `${stk} day${stk>1?"s":""}` : "—", "In a row")
+    + stat(wk || "—", "This week") + stat(all.length ? lrAgo(all[0].date) : "—", "Last session");
+  const gd = itGuideHtml(); $("lrGuide").hidden = !gd; $("lrGuide").innerHTML = gd;
   // form
   const f = $("lrForm").elements; if(!f.date.value) f.date.value = t;
   const sel = $("lrSkillSel"), keep = sel.value;
@@ -2526,22 +2570,22 @@ function renderBrain(){
   $("lrFilter").value = lrFilt;
   const shown = all.filter(e=>!lrFilt || e.skill===lrFilt), cap = lrAll ? shown : shown.slice(0, 25);
   $("lrLog").innerHTML = cap.length ? cap.map(e=>`<div class="lrent">
-      <div class="lrmeta"><span class="lrdate">${niceDate(e.date)}</span><span class="lrdur">${lrMins(e.mins)}</span>
+      <div class="lrmeta"><span class="lrdate">${niceDate(e.date)}</span>
         <span class="lracts"><button class="x" data-act="lrEdit" data-id="${e.id}" title="Edit">✎</button><button class="x" data-act="lrDel" data-id="${e.id}" title="Delete">×</button></span></div>
       <span class="lrtag">${esc(skName(skOf(e.skill)))}</span>
       <p>${esc(e.text)}</p></div>`).join("")
       + (shown.length > cap.length ? `<button class="btn sm lrmore" data-act="lrMore">Show all ${shown.length} sessions</button>` : "")
     : `<div class="empty">${all.length ? "No sessions for this skill yet." : "No sessions yet. Log your first one above."}</div>`;
-  // your skills, ranked by time
+  // your skills, ranked by sessions
   const rows = L.skills.map(s=>{ const es = all.filter(e=>e.skill===s.id);
-    return {s, m:es.reduce((a,e)=>a+(e.mins||0),0), n:es.length, wk:es.filter(e=>e.date>=ws).reduce((a,e)=>a+(e.mins||0),0), last:es[0] ? es[0].date : null}; })
-    .sort((x,y)=>(y.m-x.m) || (y.n-x.n));
-  const top = Math.max(1, ...rows.map(x=>x.m || x.n));
+    return {s, n:es.length, wk:es.filter(e=>e.date>=ws).length, last:es[0] ? es[0].date : null}; })
+    .sort((x,y)=>y.n-x.n);
+  const top = Math.max(1, ...rows.map(x=>x.n));
   $("lrAreaSum").textContent = `${L.skills.length} skill${L.skills.length>1?"s":""}`;
   $("lrAreas").innerHTML = rows.map(x=>`<div class="lrarea ${lrFilt===x.s.id?"on":""}" data-act="lrFilt" data-id="${x.s.id}" title="Show only this skill's sessions">
-      <b>${esc(skName(x.s))} <button class="x" data-act="skEdit" data-id="${x.s.id}" title="Rename or delete">✎</button></b><span class="num">${x.m ? fmtH(x.m/60) : "—"}</span>
-      <div class="bar"><i style="width:${(x.m || x.n)/top*100}%"></i></div>
-      <small>${x.n ? `${x.n} session${x.n>1?"s":""}${x.wk ? ` · ${fmtH(x.wk/60)} this week` : ""} · last ${lrAgo(x.last)}` : "No sessions yet"}</small></div>`).join("");
+      <b>${esc(skName(x.s))} <button class="x" data-act="skEdit" data-id="${x.s.id}" title="Rename or delete">✎</button></b><span class="num">${x.n || "—"}</span>
+      <div class="bar"><i style="width:${x.n/top*100}%"></i></div>
+      <small>${x.n ? `${x.n} session${x.n>1?"s":""}${x.wk ? ` · ${x.wk} this week` : ""} · last ${lrAgo(x.last)}` : "No sessions yet"}</small></div>`).join("");
   // overview
   const sm = L.summary;
   if(sm && sm.text){
@@ -2554,8 +2598,8 @@ function renderBrain(){
   }
 }
 function lrPrompt(){
-  const L = LR(), all = lrSessions().slice().reverse(), mins = all.reduce((a,e)=>a+(e.mins||0),0);
-  const per = L.skills.map(s=>{ const es = all.filter(e=>e.skill===s.id); return `${s.name}: ${es.length} session${es.length===1?"":"s"}, ${lrMins(es.reduce((a,e)=>a+(e.mins||0),0))}`; });
+  const L = LR(), all = lrSessions().slice().reverse();
+  const per = L.skills.map(s=>{ const es = all.filter(e=>e.skill===s.id); return `${s.name}: ${es.length} session${es.length===1?"":"s"}`; });
   return `I keep a log of the skills I'm practising. Below is every session I've logged, oldest first. Please write a clear, formal overview I can save in my notes:
 
 ## Summary
@@ -2565,7 +2609,7 @@ A short paragraph on where I am overall.
 One section per skill (${L.skills.map(s=>s.name).join(", ")}), listing the key concepts and abilities I've picked up.
 
 ## Where my effort has gone
-Which skills I've put the most time into, and which I've barely touched.
+Which skills I've practised most, and which I've barely touched.
 
 ## Gaps to revisit
 Anything that sounds shaky or unfinished, based on what I wrote.
@@ -2577,9 +2621,9 @@ Use "## " headings and "- " bullet points. Only use what's in my log; don't inve
 
 ---
 Skills: ${per.join(" · ")}
-Total: ${all.length} sessions · ${mins ? lrMins(mins) : "time not tracked"}
+Total: ${all.length} sessions
 
-` + all.map(e=>`[${e.date}] ${skOf(e.skill).name}${e.mins ? ` · ${lrMins(e.mins)}` : ""}
+` + all.map(e=>`[${e.date}] ${skOf(e.skill).name}
 ${e.text}`).join("\n\n");
 }
 async function lrCopy(){
@@ -2592,7 +2636,7 @@ async function lrCopy(){
 }
 function lrFill(e){
   const f = $("lrForm").elements; lrEditing = e ? e.id : null;
-  f.date.value = e ? e.date : today(); f.mins.value = e && e.mins ? e.mins : ""; f.text.value = e ? e.text : "";
+  f.date.value = e ? e.date : today(); f.text.value = e ? e.text : "";
   if(e) $("lrSkillSel").value = e.skill;
   $("lrFormTitle").textContent = e ? "Edit session" : "Log a session"; $("lrCancel").hidden = !e;
 }
@@ -2611,10 +2655,14 @@ $("skForm").addEventListener("submit", e=>{
 });
 $("lrForm").addEventListener("submit", e=>{
   e.preventDefault(); const f = e.target.elements, text = f.text.value.trim(), s = skOf(f.skill.value); if(!text || !s) return;
-  const v = {skill:s.id, date:f.date.value || today(), mins:Math.max(0, Math.min(1440, Math.round(+f.mins.value||0))), text:text.slice(0,5000)};
+  const v = {skill:s.id, date:f.date.value || today(), text:text.slice(0,5000)};
   const L = LR(), x = lrEditing && L.log.find(y=>y.id===lrEditing); L.last = s.id;
   if(x){ Object.assign(x, v); toast("Saved."); }
-  else { L.log.push({id:uid(), t:Date.now(), ...v}); gain({xp:5}, `📘 Practised ${s.name}`); credit("mind", 5, v.date); toast(`📘 ${s.name} session saved${v.mins ? ` · ${lrMins(v.mins)}` : ""}.`); }
+  else { L.log.push({id:uid(), t:Date.now(), ...v});
+    // a session for a skill also ticks off its "<skill> study" routine for that day
+    const rt = S.routines.find(r=>r.name.toLowerCase()===`${s.name} study`.toLowerCase());
+    if(rt){ const a = S.rdone[rt.id] || (S.rdone[rt.id] = []); if(!a.includes(v.date)){ a.push(v.date); a.sort(); } }
+    gain({xp:5}, `📘 Practised ${s.name}`); credit("mind", 5, v.date); toast(`📘 ${s.name} session saved.`); }
   lrFill(null); save(); renderAll();
 });
 $("lrFilter").addEventListener("change", e=>{ lrFilt = e.target.value; lrAll = false; renderBrain(); });
@@ -2622,10 +2670,10 @@ $("lrFilter").addEventListener("change", e=>{ lrFilt = e.target.value; lrAll = f
 function skDashHtml(){
   const L = LR(); if(!L.skills.length) return `<p class="sub" style="margin:0">Add a skill you're learning, like Networking or Cybersecurity, and log what you practise each day.</p>`;
   const t = today(), ws = weekStart(t), all = lrSessions(), wk = all.filter(e=>e.date>=ws && e.date<=t);
-  const per = L.skills.map(s=>({s, m:wk.filter(e=>e.skill===s.id).reduce((a,e)=>a+(e.mins||0),0), n:wk.filter(e=>e.skill===s.id).length})).filter(x=>x.n).sort((a,b)=>b.m-a.m);
+  const per = L.skills.map(s=>({s, n:wk.filter(e=>e.skill===s.id).length})).filter(x=>x.n).sort((a,b)=>b.n-a.n);
   const last = all[0];
-  return `<div class="sksum"><b>${fmtH(wk.reduce((a,e)=>a+(e.mins||0),0)/60)}</b> practised this week${wk.length ? ` · ${wk.length} session${wk.length>1?"s":""}` : ""}</div>`
-    + (per.length ? per.slice(0,4).map(x=>`<div class="mini"><span>${esc(x.s.icon||"📘")}</span><div class="grow">${esc(x.s.name)}</div><small>${fmtH(x.m/60)}</small></div>`).join("") : `<p class="sub" style="margin:4px 0">Nothing practised yet this week.</p>`)
+  return `<div class="sksum"><b>${wk.length}</b> session${wk.length===1?"":"s"} this week${skStreak()>1 ? ` · ${skStreak()} days in a row` : ""}</div>`
+    + (per.length ? per.slice(0,4).map(x=>`<div class="mini"><span>${esc(x.s.icon||"📘")}</span><div class="grow">${esc(x.s.name)}</div><small>${x.n}</small></div>`).join("") : `<p class="sub" style="margin:4px 0">Nothing practised yet this week.</p>`)
     + (last ? `<p class="unote" style="margin-top:6px"><small>Last: ${esc(skOf(last.skill).name)}, ${lrAgo(last.date)}. </small>${esc(last.text.replace(/[*_#`>]+/g,"").replace(/\s+/g," ").trim().slice(0,140))}${last.text.length>140?"…":""}</p>` : "");
 }
 /* ---------- emoji drop-down for every "pick an emoji" box ---------- */
@@ -3182,7 +3230,7 @@ function stCalc(r){
   }
   o.green = sumOf(o.k, GOOD); o.bad = sumOf(o.k, BAD); o.tracked = sumOf(o.k, RKEYS);
   o.todo = S.hurdles.filter(h=>h.done && h.done>=r[0] && h.done<=r[1]).length;
-  o.skill = LR().log.filter(e=>e.date>=r[0] && e.date<=r[1]).reduce((a,e)=>a+(e.mins||0),0)/60;
+  o.skill = LR().log.filter(e=>e.date>=r[0] && e.date<=r[1]).length;
   return o;
 }
 function stDelta(cur, prev, fmt, goodUp){
@@ -3286,7 +3334,7 @@ function renderStats(){
     tgt ? kpi("🔥","Calorie target hit", `${C.calHit}<span class="of">/${C.calLogged}</span>`, C.calLogged ? `days · avg ${fmtK(C.kcal/C.calLogged)} kcal` : "no food logged", stDelta(C.calHit, Pv && Pv.calHit, v=>`${v} day${v===1?"":"s"}`, true))
         : kpi("🔥","Days food logged", C.calLogged, C.calLogged ? `avg ${fmtK(C.kcal/C.calLogged)} kcal` : "", stDelta(C.calLogged, Pv && Pv.calLogged, v=>`${v}`, true)),
     kpi("✅","To-dos finished", C.todo, `${putActive().length} still open`, stDelta(C.todo, Pv && Pv.todo, v=>`${v}`, true)),
-    kpi("📘","Skill practice", fmtH(C.skill), `${LR().skills.length} skill${LR().skills.length===1?"":"s"}`, stDelta(C.skill, Pv && Pv.skill, fmtH, true)),
+    kpi("📘","Skill sessions", C.skill, `${LR().skills.length} skill${LR().skills.length===1?"":"s"}`, stDelta(C.skill, Pv && Pv.skill, v=>`${v}`, true)),
     kpi("🌱","Active days", `${C.active}<span class="of">/${C.days}</span>`, "days you did anything", stDelta(C.active, Pv && Pv.active, v=>`${v}`, true))
   ].join("");
   const B = stBuckets();
@@ -3299,7 +3347,7 @@ function renderStats(){
   const all = [["🔥","Streak", `${liveStreak()}`, `best ${S.best} · ${activeDays()} active days in total`],
     ["🟢","Productive hours", fmtH(greenAll()), `${Object.keys(S.mapped).length} days mapped`], ["🍽️","Days of food logged", Object.keys(S.calLogged||{}).length, ""],
     ["✅","To-dos finished", doneAll, `${putActive().length} open`],
-    ["📘","Skill practice", fmtH(skMinsAll()/60), `${LR().log.length} sessions`], ["🧼","Routines done", S.stats.care, ""],
+    ["📘","Skill sessions", LR().log.length, `${new Set(LR().log.map(e=>e.date)).size} days practised`], ["🧼","Routines done", S.stats.care, ""],
     ["🔍","Weekly reviews", Object.keys(S.reviews).length, ""]];
   $("statGrid").innerHTML = all.map(([ic,l,v,sub])=>kpi(ic,l,v,sub)).join("");
 }
@@ -3345,7 +3393,7 @@ function weekRecap(ws){
   const peak = badH.indexOf(Math.max(...badH));
   const best = care.slice().sort((a,b)=>b.c.score-a.c.score)[0];
   const todo = S.hurdles.filter(x=>x.done && x.done>=ws && x.done<=days[days.length-1]).length;
-  const skm = LR().log.filter(e=>e.date>=ws && e.date<=t).reduce((a,e)=>a+(e.mins||0),0);
+  const skm = LR().log.filter(e=>e.date>=ws && e.date<=t).length;
   const dot = c => `<i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${c};margin-right:3px"></i>`;
   const parts = [];
   if(care.length) parts.push(`🌿 Care: ${CD_LV.filter(l=>lv[l[0]]).map(l=>`${dot(RATE[l[0]].c)}<b>${lv[l[0]]}</b> ${l[2].toLowerCase()}`).join(", ")}`);
@@ -3353,7 +3401,7 @@ function weekRecap(ws){
   if(sumOf(k, GOOD)) parts.push(`🟢 <b>${fmtH(sumOf(k, GOOD))}</b> productive`);
   if(sumOf(k, BAD)) parts.push(`🔴 <b>${fmtH(sumOf(k, BAD))}</b> dead or drifting, mostly around <b>${hourLabel(peak)}–${hourLabel((peak+1)%24)}</b>`);
   if(todo) parts.push(`✅ <b>${todo}</b> to-do${todo>1?"s":""} finished`);
-  if(skm) parts.push(`📘 <b>${fmtH(skm/60)}</b> of skill practice`);
+  if(skm) parts.push(`📘 <b>${skm}</b> skill session${skm>1?"s":""}`);
   return parts.length ? `<div class="recap">${parts.map(p=>`<div>${p}</div>`).join("")}</div>` : `<p class="sub">Nothing logged this week yet. The recap fills in as you go.</p>`;
 }
 function renderReview(){
@@ -3405,7 +3453,7 @@ function confetti(){
 function renderHeader(){
   const L = levelInfo(S.totalXp), st = liveStreak();
   $("hStreak").textContent = st; $("hStreak").parentElement.title = `Streak: ${st} day${st===1?"":"s"} in a row with something logged (best ${S.best})${activeDay(today()) ? "" : ". Log anything today to keep it going"}`;
-  $("hBrain").textContent = fmtH(skMinsAll()/60); $("hHours").textContent = fmtH(greenAll());
+  $("hBrain").textContent = LR().log.length; $("hHours").textContent = fmtH(greenAll());
 }
 function renderLog(){
   $("log").innerHTML = S.log.filter(l=>!/^⬆️ Reached level|^🏅 Achievement/.test(l.text)).map(l=>{ const d = new Date(l.t); return `<div><small>${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</small> · ${esc(l.text.replace(/\s*\+\d+ XP\b/g,""))}</div>`; }).join("");
