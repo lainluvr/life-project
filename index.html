@@ -563,6 +563,10 @@ input.emo{cursor:pointer;text-align:center;font-size:19px;padding-right:20px!imp
 #lrSkillSel{display:block;width:100%;margin-top:4px;padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text)}
 #lrFilter{padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);max-width:200px}
 .sksum{font-size:14px;margin-bottom:6px} .sksum b{font-size:20px;font-family:Georgia,serif}
+.syncf label{display:block;margin:8px 0 0;font-size:14px}
+.syncf input{display:block;width:100%;max-width:380px;margin-top:4px;padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);box-sizing:border-box}
+.syncf .row{margin-top:10px} .syncf small{display:block;margin-top:8px}
+#syncStatus{display:block;margin:4px 0}
 .lrempty p{font-family:Georgia,serif;font-size:16px;line-height:1.6;max-width:640px}
 .lrnotes{margin:22px 4px 8px}
 @media (max-width:640px){ .lrstats{grid-template-columns:repeat(3,minmax(0,1fr))} .lrstats div:nth-child(3){border-right:0} .lrstats div:nth-child(n+4){border-top:1px solid var(--line)} .lrtitle{font-size:22px} .lrrow{flex-wrap:wrap} }
@@ -1063,6 +1067,12 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
     </div>
     <small class="sub">Works from your time blocks, so it pairs well with the reminder and ↻ Still on it. Sleep doesn't count. The nudge has its own sound: one soft low "bloop", while the half-hour reminder rings "ding-ding" three times. <button class="linkbtn" data-act="nudgeTest">🔈 Hear the nudge</button></small>
   </div>
+  <div class="card" data-sg="save" id="syncCard">
+    <h2>🔒 Sync between devices</h2>
+    <p class="sub">Keeps your PC and phone in step. Everything is locked with your passphrase on this device before it's uploaded, so the copy online can't be read without it, not even by Google. The theme, reminders and widget mode stay separate on each device.</p>
+    <small id="syncStatus"></small>
+    <div id="syncBody"></div>
+  </div>
   <div class="card" data-sg="save">
     <h2>💾 Save file</h2>
     <p class="sub">The app keeps your progress inside this browser, which is easy to lose (clearing browser data, switching browsers). Pick a save file and every change is also written to that file on your PC within a second. If the browser ever forgets everything, use <b>Open a save file</b> to get it all back.</p>
@@ -1160,6 +1170,19 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 (() => {
 "use strict";
 const KEY = "lifeLogin.v1";
+
+/* ===== Firebase settings for sync =====
+   Paste the values from Firebase (Project settings → Your apps → the firebaseConfig block) between the two braces below,
+   so it looks like:  apiKey: "...", authDomain: "...", projectId: "...", (and the rest)
+   These aren't passwords. They only say which Firebase project to use; your data stays locked by your sign-in and passphrase. */
+const FIREBASE_CONFIG = {
+ apiKey: "AIzaSyDD6H1a79Zg1da-pvjwU_H2kQtkOjbsi7Y",
+  authDomain: "life-project-e2c7f.firebaseapp.com",
+  projectId: "life-project-e2c7f",
+  storageBucket: "life-project-e2c7f.firebasestorage.app",
+  messagingSenderId: "314747886088",
+  appId: "1:314747886088:web:1589256c8cd926d7c3cfbd"
+};
 
 /* ---------- utils ---------- */
 const $ = id => document.getElementById(id);
@@ -1461,7 +1484,7 @@ let saveWarned = false;
 function save(){
   try{ localStorage.setItem(KEY, JSON.stringify(S)); }
   catch(e){ if(!saveWarned && e && e.name==="QuotaExceededError"){ saveWarned = true; toast("⚠️ Storage is full! Use image links instead of uploaded covers, or remove some."); } }
-  fileQueue(); bkQueue();
+  fileQueue(); bkQueue(); syncQueue();
 }
 
 /* ---------- save file on the PC (File System Access API, Chrome/Edge) ---------- */
@@ -1610,6 +1633,230 @@ async function bkInit(){
   }
   renderFile();
 }
+
+/* ---------- sync between devices: locked with your passphrase here, stored in Firebase ---------- */
+// The passphrase never leaves this device. It's turned into a key (PBKDF2, 600,000 rounds), the data is
+// compressed and locked with AES-256-GCM, and only that locked copy is uploaded. Firebase can't read it.
+const FB_V = "12.6.0";
+// Settings that belong to one device, and old parts of the app that only stay on the PC: never uploaded
+const SYNC_LOCAL = ["fileAsk","widget","setTab","careFocus","careSide","alarm","hyper","nagMix","theme","accent",
+  "shelves","items","qol","bf","bn","brainArchive","journal","journalBonus","ach","well","wellBonus"];
+const SK_BASE = KEY+".syncBase", SK_SNAP = KEY+".syncSnap", SK_DEV = KEY+".device", SK_BEFORE = KEY+".beforeSync";
+const TEST_HOST = location.hostname==="localhost" || location.hostname==="127.0.0.1";
+let fb = null, fbUser = null, syncKey = null, syncSalt = null, syncHasVault = null;
+let syncState = "off", syncMsg = "", syncTimer = null, syncUnsub = null, syncBusy = false, syncApplying = false, syncLastOk = null, syncBodyFor = "";
+// off (not set up) | loading | out (signed out) | locked (needs passphrase) | newpass (choosing a new one) | on | error
+const syncConfigured = () => !!((FIREBASE_CONFIG && FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.projectId) || (TEST_HOST && window.__fbFake));
+const lsGet = k => { try{ return localStorage.getItem(k); }catch(e){ return null; } };
+const lsSet = (k, v) => { try{ v==null ? localStorage.removeItem(k) : localStorage.setItem(k, v); }catch(e){} };
+const idbGetK = k => idb("readonly", st=>st.get(k)).catch(()=>null);
+const idbPutK = (k, v) => idb("readwrite", st=> v ? st.put(v, k) : st.delete(k)).catch(()=>null);
+function devName(){ let d = lsGet(SK_DEV); if(!d){ d = (/iPhone|iPad|Android/i.test(navigator.userAgent) ? "phone" : "PC") + "-" + uid(); lsSet(SK_DEV, d); } return d; }
+function syncSubset(){ const o = {}; for(const k of Object.keys(S)) if(!SYNC_LOCAL.includes(k)) o[k] = S[k]; return o; }
+const syncJson = () => JSON.stringify(syncSubset());
+const syncDirty = () => syncJson() !== lsGet(SK_SNAP);
+const bytesEq = (a, b) => a && b && a.length===b.length && a.every((x,i)=>x===b[i]);
+
+// --- locking and unlocking
+const te = new TextEncoder();
+async function skDerive(pass, salt){
+  const base = await crypto.subtle.importKey("raw", te.encode(pass.normalize("NFKC")), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2", salt, iterations:600000, hash:"SHA-256"}, base, {name:"AES-GCM", length:256}, false, ["encrypt","decrypt"]);
+}
+async function gzip(str){ return new Uint8Array(await new Response(new Blob([str]).stream().pipeThrough(new CompressionStream("gzip"))).arrayBuffer()); }
+async function gunzip(u8){ return new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream("gzip"))).text(); }
+async function seal(key, str, ad){
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM", iv, additionalData:te.encode(ad)}, key, await gzip(str)));
+  return {iv, ct};
+}
+async function unseal(key, iv, ct, ad){ return gunzip(new Uint8Array(await crypto.subtle.decrypt({name:"AES-GCM", iv, additionalData:te.encode(ad)}, key, ct))); }
+if(TEST_HOST) window.__llCrypto = {skDerive, seal, unseal};
+
+// --- Firebase, loaded only when sync is set up
+async function fbLoad(){
+  if(fb) return fb;
+  if(TEST_HOST && window.__fbFake) return fb = window.__fbFake;
+  const base = `https://www.gstatic.com/firebasejs/${FB_V}/`;
+  const [app, auth, fs] = await Promise.all(["firebase-app","firebase-auth","firebase-firestore"].map(m=>import(base + m + ".js")));
+  const a = app.initializeApp(FIREBASE_CONFIG);
+  return fb = {auth, fs, A:auth.getAuth(a), D:fs.getFirestore(a)};
+}
+const vaultRef = () => fb.fs.doc(fb.D, "users", fbUser.uid, "vault", "main");
+const authMsg = e => ({
+  "auth/invalid-credential":"Email or password is wrong.", "auth/wrong-password":"Email or password is wrong.",
+  "auth/user-not-found":"No account with that email yet. Use Create account.", "auth/email-already-in-use":"There's already an account with that email. Use Sign in.",
+  "auth/weak-password":"Pick a longer password (at least 8 characters).", "auth/invalid-email":"That email doesn't look right.",
+  "auth/missing-password":"Type your password.", "auth/too-many-requests":"Too many tries. Wait a few minutes and try again.",
+  "auth/network-request-failed":"No connection. Check you're online."})[e && e.code] || ("Couldn't sign in: " + (e && e.code || e && e.message || e));
+
+async function syncInit(){
+  if(!syncConfigured()){ syncState = "off"; return renderSync(); }
+  syncState = "loading"; renderSync();
+  try{
+    await fbLoad();
+    fb.auth.onAuthStateChanged(fb.A, async u=>{
+      fbUser = u; syncStop();
+      if(!u){ syncKey = null; syncState = "out"; return renderSync(); }
+      const k = await idbGetK("skey");
+      if(k && k.uid===u.uid && k.key){ syncKey = k.key; syncSalt = k.salt; syncState = "on"; renderSync(); syncStart(); }
+      else syncLock("");
+    });
+  }catch(e){ syncState = "error"; syncMsg = "Couldn't load sync. Check you're online, then reload the page."; renderSync(); }
+}
+function syncStart(){
+  syncStop();
+  syncUnsub = fb.fs.onSnapshot(vaultRef(), snap=>{ syncOnRemote(snap); },
+    e=>{ syncMsg = "Sync stopped: " + (e && e.code || e && e.message || e); renderSync(); });
+}
+function syncStop(){ if(syncUnsub){ try{ syncUnsub(); }catch(e){} syncUnsub = null; } clearTimeout(syncTimer); }
+async function syncLock(msg){
+  syncStop(); syncKey = null; syncSalt = null; await idbPutK("skey", null);
+  syncState = "locked"; syncMsg = msg; syncHasVault = null; renderSync();
+  try{ syncHasVault = (await fb.fs.getDoc(vaultRef())).exists(); }catch(e){ syncHasVault = null; }
+  renderSync();
+}
+
+// --- something changed online (or this is the first look after unlocking)
+async function syncOnRemote(snap){
+  if(!syncKey || syncState!=="on") return;
+  if(!snap.exists()) return syncPush(true);                    // nothing online yet: upload this device
+  const d = snap.data(), base = lsGet(SK_BASE);
+  if(String(d.t)===base){ if(syncDirty()) syncQueue(true); else { syncLastOk = syncLastOk || Date.now(); renderSync(); } return; }
+  if(syncBusy && d.dev===devName()) return;                     // our own upload arriving back
+  let p;
+  try{
+    if(!bytesEq(d.salt.toUint8Array(), syncSalt)) throw new Error("passphrase changed");
+    p = JSON.parse(await unseal(syncKey, d.iv.toUint8Array(), d.ct.toUint8Array(), fbUser.uid));
+  }catch(e){ return syncLock("Your passphrase was changed on another device. Enter the new one."); }
+  if(p.v > DATA_V){ syncState = "error"; syncMsg = "Your other device has a newer version of the app. Reload this page to get it, then sync works again."; syncStop(); return renderSync(); }
+  if(!base){
+    // first sync on this device
+    if(confirm("Your synced data was found.\n\nLoad it onto this device? It replaces what's on this device right now.")) return syncApply(p, d.t);
+    if(confirm("Upload THIS device's data instead? It replaces the synced copy, and your other devices will get this device's data.")) return syncPush(true);
+    return syncLock("Nothing was changed. Enter your passphrase again when you're ready to choose.");
+  }
+  if(syncDirty()){
+    // both devices changed things since they last synced
+    if(!confirm("This device and your other device both changed things since they last synced.\n\nOK: use the OTHER device's version (this device's recent changes are kept as a backup copy on this device).\nCancel: keep THIS device's version and upload it.")) return syncPush(true);
+    lsSet(SK_BEFORE, JSON.stringify(S));
+  }
+  syncApply(p, d.t);
+}
+function syncApply(p, t){
+  const keep = {}; for(const k of SYNC_LOCAL) if(k in S) keep[k] = S[k];
+  S = Object.assign(migrate(p), keep);
+  syncApplying = true; save(); syncApplying = false;
+  lsSet(SK_BASE, String(t)); lsSet(SK_SNAP, syncJson()); syncLastOk = Date.now(); syncMsg = "";
+  renderAll(); renderSync();
+}
+
+// --- upload this device's changes
+function syncQueue(soon){
+  if(syncState!=="on" || syncApplying) return;
+  clearTimeout(syncTimer); syncTimer = setTimeout(()=>syncPush(false), soon ? 300 : 4000);
+}
+async function syncPush(force){
+  if(syncState!=="on" || !syncKey) return;
+  if(syncBusy){ syncQueue(); return; }
+  if(!force && !syncDirty()) return;
+  syncBusy = true; clearTimeout(syncTimer);
+  const json = syncJson(), base = lsGet(SK_BASE), me = fbUser.uid;
+  try{
+    const {iv, ct} = await seal(syncKey, json, me), t = Date.now(), B = fb.fs.Bytes;
+    const res = await fb.fs.runTransaction(fb.D, async tx=>{
+      const cur = await tx.get(vaultRef());
+      if(!force && cur.exists() && String(cur.data().t)!==base) return "changed";   // the live listener sorts this out
+      tx.set(vaultRef(), {v:1, dv:DATA_V, t, dev:devName(), salt:B.fromUint8Array(syncSalt), iv:B.fromUint8Array(iv), ct:B.fromUint8Array(ct)});
+      return "ok";
+    });
+    if(res==="ok"){ lsSet(SK_BASE, String(t)); lsSet(SK_SNAP, json); syncLastOk = Date.now(); syncMsg = ""; }
+  }catch(e){ syncMsg = navigator.onLine===false ? "Offline. Your changes will sync when you're back online." : "Couldn't sync: " + (e && e.code || e && e.message || e); }
+  syncBusy = false; renderSync();
+  if(!syncMsg && syncDirty()) syncQueue();
+}
+
+// --- passphrase
+async function syncUnlock(pass){
+  syncMsg = "Unlocking…"; renderSync();
+  try{
+    const snap = await fb.fs.getDoc(vaultRef());
+    let salt, key;
+    if(snap.exists()){
+      const d = snap.data(); salt = d.salt.toUint8Array(); key = await skDerive(pass, salt);
+      try{ await unseal(key, d.iv.toUint8Array(), d.ct.toUint8Array(), fbUser.uid); }
+      catch(e){ syncMsg = "That passphrase doesn't open your synced data. Check it and try again."; return renderSync(); }
+    } else { salt = crypto.getRandomValues(new Uint8Array(16)); key = await skDerive(pass, salt); }
+    syncKey = key; syncSalt = salt; await idbPutK("skey", {key, salt, uid:fbUser.uid});
+    lsSet(SK_BASE, null); syncState = "on"; syncMsg = ""; renderSync(); syncStart();
+  }catch(e){ syncMsg = "Couldn't unlock: " + (e && e.code || e && e.message || e); renderSync(); }
+}
+async function syncNewPass(pass){
+  if(!confirm("Lock everything with this NEW passphrase?\n\nThis device's data replaces the synced copy. Your other devices will ask for the new passphrase.")) return;
+  syncMsg = "Saving…"; renderSync();
+  try{
+    const salt = crypto.getRandomValues(new Uint8Array(16)), key = await skDerive(pass, salt);
+    syncKey = key; syncSalt = salt; await idbPutK("skey", {key, salt, uid:fbUser.uid});
+    syncState = "on"; syncMsg = ""; await syncPush(true); syncStart();
+    if(!syncMsg) toast("🔒 New passphrase set and your data uploaded.");
+  }catch(e){ syncMsg = "Couldn't set it: " + (e && e.message || e); renderSync(); }
+}
+
+// --- the Sync card in Settings
+function renderSync(){
+  const st = $("syncStatus"), body = $("syncBody"); if(!st) return;
+  const when = syncLastOk ? new Date(syncLastOk).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}) : "";
+  st.className = syncState==="on" && !syncMsg ? "ok" : syncState==="error" || (syncMsg && syncState==="on") ? "warn" : "";
+  st.textContent = syncMsg || ({off:"Not set up in this copy of the app yet.", loading:"Loading…", out:"Signed out. Your data stays on this device.",
+    locked: fbUser ? `Signed in as ${fbUser.email}. Enter your passphrase to start syncing.` : "", newpass:"",
+    on:`✓ Syncing as ${fbUser && fbUser.email}${when ? ` · last synced ${when}` : ""}`, error:""})[syncState] || "";
+  const want = syncState + "|" + syncHasVault;
+  if(want===syncBodyFor) return;
+  syncBodyFor = want;
+  const pw = (id, ph, ac) => `<input type="password" id="${id}" placeholder="${ph}" autocomplete="${ac}" maxlength="200">`;
+  body.innerHTML = {
+    off:`<p class="sub" style="margin:6px 0 0">The Firebase settings haven't been added to the app file yet. See PHONE-SYNC-SETUP.md.</p>`,
+    loading:"", error:`<div class="row"><button class="btn" data-act="syncReload">Reload</button></div>`,
+    out:`<form id="syncAuthForm" class="syncf">
+        <label>Email<input type="email" name="email" autocomplete="username" required maxlength="200"></label>
+        <label>Password<input type="password" name="pw" autocomplete="current-password" required maxlength="200"></label>
+        <div class="row"><button class="btn primary">Sign in</button><button type="button" class="btn" data-act="syncCreate">Create account</button><button type="button" class="linkbtn" data-act="syncForgot">Forgot password</button></div>
+        <small class="sub">This is the account login. Your passphrase (next step) is separate and never sent anywhere.</small></form>`,
+    locked: syncHasVault===null ? `<p class="sub" style="margin:6px 0 0">Checking for your synced data…</p><div class="row"><button class="btn" data-act="syncOut">Sign out</button></div>`
+      : syncHasVault ? `<form id="syncPassForm" class="syncf">
+        <label>Passphrase${pw("syncPass","your passphrase","current-password")}</label>
+        <div class="row"><button class="btn primary">Unlock</button><button type="button" class="btn" data-act="syncOut">Sign out</button></div>
+        <small class="sub">Forgot it? <button type="button" class="linkbtn" data-act="syncNewPassForm">Start over with a new passphrase</button> (uploads this device's data).</small></form>`
+      : `<form id="syncNewForm" class="syncf">
+        <p class="sub" style="margin:6px 0">Nothing is synced yet. Choose your passphrase: 4 or 5 random words is best. It locks your data on this device before upload. <b>If you forget it, the synced copy can't be opened</b> (your devices and backups still have everything).</p>
+        <label>Passphrase${pw("syncNew1","4 or 5 random words","new-password")}</label>
+        <label>Type it again${pw("syncNew2","same again","new-password")}</label>
+        <div class="row"><button class="btn primary">Start syncing</button><button type="button" class="btn" data-act="syncOut">Sign out</button></div></form>`,
+    newpass:`<form id="syncNewForm" data-replace="1" class="syncf">
+        <p class="sub" style="margin:6px 0">Pick a new passphrase. This device's data gets uploaded with it, and your other devices will ask for the new one.</p>
+        <label>New passphrase${pw("syncNew1","4 or 5 random words","new-password")}</label>
+        <label>Type it again${pw("syncNew2","same again","new-password")}</label>
+        <div class="row"><button class="btn primary">Save new passphrase</button><button type="button" class="btn" data-act="syncNewCancel">Cancel</button></div></form>`,
+    on:`<div class="row"><button class="btn" data-act="syncNow">Sync now</button><button class="btn" data-act="syncNewPassForm">Change passphrase</button><button class="btn" data-act="syncOut">Sign out</button></div>`
+  }[syncState] || "";
+}
+document.addEventListener("submit", async e=>{
+  const f = e.target; if(!f.id || !f.id.startsWith("sync")) return;
+  e.preventDefault();
+  if(f.id==="syncAuthForm"){
+    try{ syncMsg = "Signing in…"; renderSync(); await fb.auth.signInWithEmailAndPassword(fb.A, f.email.value.trim(), f.pw.value); syncMsg = ""; }
+    catch(err){ syncMsg = authMsg(err); renderSync(); }
+  } else if(f.id==="syncPassForm"){
+    const p = $("syncPass").value; if(p) syncUnlock(p);
+  } else if(f.id==="syncNewForm"){
+    const a = $("syncNew1").value, b = $("syncNew2").value;
+    if(a.trim().length < 12){ syncMsg = "Make it longer: at least 12 characters (4 or 5 words is best)."; return renderSync(); }
+    if(a!==b){ syncMsg = "The two don't match. Type them again."; return renderSync(); }
+    if(f.dataset.replace) syncNewPass(a); else syncUnlock(a);
+  }
+});
+document.addEventListener("visibilitychange", ()=>{ if(document.hidden && syncState==="on" && syncDirty()) syncPush(false); });
+window.addEventListener("online", ()=>syncQueue(true));
 
 /* ---------- XP, levels ---------- */
 const xpNeed = l => 100 + 50*(l-1);
@@ -3326,6 +3573,20 @@ document.addEventListener("click", e=>{
     case "fileOpen": fileOpen(); break;
     case "fileReconnect": fileReconnect(); break;
     case "bkLink": bkLink(); break;
+    case "syncReload": location.reload(); break;
+    case "syncCreate": { const f = $("syncAuthForm"), em = f.email.value.trim(), pw = f.pw.value;
+      if(!em || !pw){ syncMsg = "Type an email and a password first, then press Create account."; renderSync(); break; }
+      if(pw.length < 8){ syncMsg = "Pick a longer password (at least 8 characters)."; renderSync(); break; }
+      syncMsg = "Creating your account…"; renderSync();
+      fb.auth.createUserWithEmailAndPassword(fb.A, em, pw).then(()=>{ syncMsg = ""; }).catch(err=>{ syncMsg = authMsg(err); renderSync(); }); break; }
+    case "syncForgot": { const em = $("syncAuthForm").email.value.trim();
+      if(!em){ syncMsg = "Type your email first, then press Forgot password."; renderSync(); break; }
+      fb.auth.sendPasswordResetEmail(fb.A, em).then(()=>{ syncMsg = `If there's an account for ${em}, a reset email is on its way.`; renderSync(); }).catch(err=>{ syncMsg = authMsg(err); renderSync(); }); break; }
+    case "syncOut": if(confirm("Sign out of sync on this device? Everything stays on this device; it just stops syncing.")){
+      syncStop(); syncKey = null; idbPutK("skey", null); lsSet(SK_BASE, null); syncMsg = ""; fb.auth.signOut(fb.A); } break;
+    case "syncNow": if(syncDirty()) syncPush(false); else { syncLastOk = Date.now(); renderSync(); toast("✓ Already up to date."); } break;
+    case "syncNewPassForm": syncState = "newpass"; syncMsg = ""; renderSync(); break;
+    case "syncNewCancel": syncState = syncKey ? "on" : "locked"; syncMsg = ""; renderSync(); break;
     case "bkReconnect": bkReconnect(); break;
     case "bkNow": bkWrite().then(()=>{ if(bkState==="ok") toast("🗂️ Backed up."); }); break;
     case "bkUnlink": if(confirm("Stop daily backups? The files already in the folder stay where they are.")){ bkH = null; bkState = "none"; idbSetB(null); renderFile(); } break;
@@ -3428,7 +3689,7 @@ lastDay = today(); lastBlock = curBlock();
 let startTab = "dash"; try{ startTab = localStorage.getItem(KEY+".tab") || "dash"; }catch(e){}
 showTab(S.widget ? "dash" : startTab);
 renderAll(); save();
-fileInit().then(bkInit);
+fileInit().then(bkInit); syncInit();
 setInterval(clock, 1000); clock();
 setInterval(alarmTick, 15000);
 setInterval(nagRoll, 10*60*1000);
