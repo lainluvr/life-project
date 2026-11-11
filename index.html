@@ -1977,7 +1977,7 @@ function rDo(id){
   S.stats.care++;
   const rew = rReward(r);
   gain(rew, `${r.icon} ${r.name}`); credit(r.area, rAreaAmt(r));
-  toast(`${r.icon} ${r.name} · ${fmtReward(rew)}`);
+  toast(`${r.icon} ${r.name} · done`);
   const daily = S.routines.filter(isDaily);
   if(!S.careBonus[t] && daily.length && daily.every(x=>rCount(x,t)>=x.times)){
     S.careBonus[t] = true; gain({xp:15}, "All daily routines done!");
