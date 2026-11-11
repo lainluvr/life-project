@@ -191,6 +191,14 @@ body.widget .wrap{max-width:none;padding:12px}
 .rt.over small.when{color:var(--warn);font-weight:700}
 .rt.due small.when{color:var(--accent);font-weight:600}
 .rt .acts{display:flex;gap:4px;align-items:center;flex:none}
+.rt:has(.wkhow){flex-wrap:wrap}
+.wkhow{flex:1 1 100%;font-size:13px;line-height:1.5}
+.wkhow summary{margin-top:0}
+.wkhow summary{color:var(--accent);font-weight:600}
+.wkhow p{margin:8px 0}
+.wkt{width:100%;border-collapse:collapse;font-size:12.5px}
+.wkt th,.wkt td{text-align:left;padding:5px 6px;border-top:1px solid var(--line);vertical-align:top}
+.wkt td:nth-child(2){white-space:nowrap;font-weight:600}
 .dots{display:flex;gap:3px;margin-top:5px}
 .dots i{width:9px;height:9px;border-radius:50%;background:var(--line)}
 .dots i.on{background:var(--good)}
@@ -2006,8 +2014,28 @@ function rPast(id){
   a.push(shiftDate(today(), -n)); a.sort(); addLog(`Logged ${r.name} as done ${n} day(s) ago`);
   save(); renderAll();
 }
+// Step-by-step guide shown inside the Morning workout routine
+const WORKOUT_HOW = `
+  <p><b>About 25 minutes, 3 mornings a week</b> (e.g. Mon / Wed / Fri). Drink a glass of water first.</p>
+  <p><b>1. Warm up, 3 min</b><br>March in place 30 s · 10 arm circles each way · 10 leg swings per leg · 10 slow squats.</p>
+  <p><b>2. The circuit</b>: do every set of one exercise, resting 60–90 s between sets, then move to the next.</p>
+  <table class="wkt">
+    <tr><th>Exercise</th><th>Sets × reps</th><th>How</th></tr>
+    <tr><td>Push-ups</td><td>3 × 8–15</td><td>Lower for 3 seconds, chest almost to the floor, push up. Too easy? Feet on a chair.</td></tr>
+    <tr><td>Squats</td><td>3 × 12–20</td><td>Feet shoulder-width, sit back like into a chair, heels down, lower slowly.</td></tr>
+    <tr><td>Table rows</td><td>3 × 8–12</td><td>Lie under a sturdy table, grab the edge, pull your chest up to it, lower slowly.</td></tr>
+    <tr><td>Glute bridges</td><td>3 × 12–15</td><td>On your back, knees bent, push hips up, squeeze 2 s at the top.</td></tr>
+    <tr><td>Reverse lunges</td><td>2 × 8 per leg</td><td>Step one foot back, lower the back knee near the floor, step back up.</td></tr>
+    <tr><td>Plank</td><td>3 × 30 s</td><td>On forearms and toes, straight line head to heels, squeeze your stomach.</td></tr>
+  </table>
+  <p><b>3. How hard</b>: end each set when you have only 1–2 good reps left. The burn is fine; sharp or joint pain means stop that exercise.</p>
+  <p><b>4. Getting harder</b>: once you hit the top number on every set (like 3 × 15 push-ups), make it harder: slower, feet raised, or a pause at the bottom.</p>
+  <p><b>5. Then eat breakfast with protein</b>: eggs, Greek yogurt, a shake, or peanut butter toast with milk. Tap <b>Done</b> above.</p>`;
+let wkOpen = false;
+document.addEventListener("toggle", e => { if(e.target.id==="wkHow") wkOpen = e.target.open; }, true);
 function routineHtml(r){
   const st = rState(r), t = today(), c = rCount(r,t);
+  const how = /morning workout/i.test(r.name) ? `<details class="wkhow" id="wkHow"${wkOpen ? " open" : ""}><summary>What to do (tap to open)</summary>${WORKOUT_HOW}</details>` : "";
   let dots = "";
   if(isDaily(r) || isWeekly(r)){
     const need = isDaily(r) ? r.times : 1;
@@ -2021,7 +2049,7 @@ function routineHtml(r){
   return `<div class="rt ${st.k}">
     <div class="ic">${esc(r.icon)}</div>
     <div class="grow"><b>${esc(r.name)}</b> <span class="tag">${schedLabel(r)}</span><small class="when">${st.txt}</small>${dots}</div>
-    <div class="acts">${past}${undo}${doBtn}<button class="x" data-act="delRoutine" data-id="${r.id}" title="Remove">×</button></div>
+    <div class="acts">${past}${undo}${doBtn}<button class="x" data-act="delRoutine" data-id="${r.id}" title="Remove">×</button></div>${how}
   </div>`;
 }
 const RANK_K = {over:0,due:1,ok:2};
