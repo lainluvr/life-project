@@ -1333,7 +1333,7 @@ function CAT_SEED(){
     C("🎮","Fun on purpose","life","#e3a92b","mental")
   ];
 }
-const DATA_V = 23;
+const DATA_V = 25;
 function defaults(){
   return {
     v:DATA_V, totalXp:0, maxLevel:1, best:0,
@@ -1588,6 +1588,44 @@ Quiz, 3 rounds and 15 questions. Strong on: SSD as the cheap speed upgrade, sold
     const fix = [["aplus-c6", " HDDs are the bigger 2.5\" (laptop) or 3.5\" (desktop) boxes. M.2 = stick = SSD.", " M.2 = stick = SSD."], ["aplus-c12", "No. Lithium-ion has no memory effect (that was old NiCd batteries). Draining to 0% actually wears lithium out faster;", "No. Lithium-ion batteries have no memory effect. Draining to 0% wears them out faster;"], ["aplus-c13", " (Not NFC, which is tap to pay.)", ""], ["aplus-c14", ", not Device Manager.", "."], ["aplus-c15", "? Not Bluetooth.", "?"]];
     for(const [id, a, b] of fix){ const c = ((s.learn||{}).cards||[]).find(x=>x.id===id); if(c && c.a.includes(a)) c.a = c.a.replace(a, b); }
     s.v = 23;
+  }
+  if(s.v<24){
+    // v24: flashcards from the 1.2 (connecting mobile devices) quiz on 2026-11-12, the ones missed or half right
+    const L = s.learn = s.learn || {skills:[], log:[], summary:null}, cards = L.cards = L.cards || [], D = "2026-11-12";
+    [
+      ["Wireless earbuds don't show up in a laptop's Bluetooth list. What step is usually missing?", "Pairing: put the earbuds in pairing (discoverable) mode, then pair them from the laptop. Some devices also ask for a PIN to confirm."],
+      ["Roughly how far does Bluetooth reach, and what kind of network does it make?", "About 10 meters (33 feet) for most devices. It makes a PAN: Personal Area Network."],
+      ["What are the downsides of using a phone's hotspot for a laptop?", "It uses the phone's data plan (caps or extra charges), drains the phone's battery, and the speed depends on the cell signal."],
+      ["What's the difference between a docking station and a port replicator?", "A port replicator just copies the laptop's ports (USB, video, network) so cables stay plugged in. A docking station does that and adds more: extra ports, charging, sometimes expansion slots or drive bays."],
+      ["Switches and routers are sometimes set up with a cable that isn't USB or Ethernet. What kind of connection is that?", "A serial (console) connection, like RS-232 with a DB-9 connector or an RJ45 console cable. Modern laptops use a USB-to-serial adapter."],
+      ["When would you use NFC instead of Bluetooth?", "NFC: a quick tap at a few centimeters, like tap to pay, door or ID badges, or starting a pairing. Bluetooth: an ongoing connection over a few meters, like headphones, keyboards and speakers."]
+    ].forEach(([q, a], i)=>{ const id = "aplus-12-"+i; if(!cards.some(c=>c.id===id)) cards.push({id, q, a, sec:"1.2", exam:"1201", box:1, due:D, t:Date.parse(D+"T12:00:00")+i}); });
+    s.v = 24;
+  }
+  if(s.v<25){
+    // v25: the 1.2 study session from 2026-11-12, plus cards for the two quiz questions answered right
+    const L = s.learn = s.learn || {skills:[], log:[], summary:null}, D = "2026-11-12";
+    L.skills = L.skills || []; L.log = L.log || []; const cards = L.cards = L.cards || [];
+    let it = L.skills.find(x=>/^\s*IT\s*$/i.test(x.name)) || L.skills[0];
+    if(!it){ it = {id:uid(), name:"IT", icon:""}; L.skills.push(it); }
+    if(!L.log.some(e=>e.id==="aplus-12")) L.log.push({id:"aplus-12", skill:it.id, date:D, sec:"1.2", exam:"1201", t:Date.parse(D+"T12:00:00"),
+      text:`Watched Professor Messer 220-1201, 1.2 Connecting mobile devices.
+
+Wired: USB-C carries power, data and video in one reversible cable (video through DisplayPort or HDMI adapters; Thunderbolt uses the same shape). Lightning is Apple's older reversible connector (iPhone 5 to iPhone 14; the iPhone 15 moved to USB-C). Serial console cables (RS-232 / DB-9, or RJ45 console) set up switches and routers, through a USB-to-serial adapter on modern laptops.
+
+Wireless: Bluetooth needs pairing (pairing mode, then pair, sometimes a PIN), reaches about 10 m / 33 ft and makes a PAN (Personal Area Network). NFC is a tap at a few centimeters (payments, badges, starting a pairing); Bluetooth is an ongoing connection (headphones, keyboards, speakers). A phone hotspot or tethering shares cell data, but uses the data plan, drains the battery and depends on signal.
+
+Docking: a port replicator copies the laptop's ports; a docking station copies them and adds extras (more ports, charging, expansion).
+
+Quiz, 8 questions, about 5 right. Strong on: USB-C, Lightning, PAN, hotspot. Missed or half: the word "pairing", Bluetooth range, hotspot downsides, dock vs port replicator, serial console, NFC vs Bluetooth.`,
+      fuzzy:`Serial / console cable · dock (copy + extras) vs port replicator (copy) · Bluetooth range ~10 m`});
+    const rt = (s.routines||[]).find(r=>/^it study/i.test(r.name));
+    if(rt){ const a = (s.rdone = s.rdone || {})[rt.id] = (s.rdone[rt.id] || []); if(!a.includes(D)){ a.push(D); a.sort(); } }
+    [
+      ["What can a USB-C cable carry besides power?", "Data and video (DisplayPort or HDMI through an adapter), all in one reversible cable. Thunderbolt uses the same connector shape."],
+      ["What is Lightning, and which devices use it?", "Apple's small reversible connector, used on iPhones from the iPhone 5 to the iPhone 14 (and older iPads and AirPods). The iPhone 15 moved to USB-C."]
+    ].forEach(([q, a], i)=>{ const id = "aplus-12-r"+i; if(!cards.some(c=>c.id===id)) cards.push({id, q, a, sec:"1.2", exam:"1201", box:2, due:"2026-11-15", t:Date.parse(D+"T12:00:00")+10+i}); });
+    s.v = 25;
   }
   return s;
 }
