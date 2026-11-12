@@ -1333,7 +1333,7 @@ function CAT_SEED(){
     C("🎮","Fun on purpose","life","#e3a92b","mental")
   ];
 }
-const DATA_V = 25;
+const DATA_V = 26;
 function defaults(){
   return {
     v:DATA_V, totalXp:0, maxLevel:1, best:0,
@@ -1626,6 +1626,36 @@ Quiz, 8 questions, about 5 right. Strong on: USB-C, Lightning, PAN, hotspot. Mis
       ["What is Lightning, and which devices use it?", "Apple's small reversible connector, used on iPhones from the iPhone 5 to the iPhone 14 (and older iPads and AirPods). The iPhone 15 moved to USB-C."]
     ].forEach(([q, a], i)=>{ const id = "aplus-12-r"+i; if(!cards.some(c=>c.id===id)) cards.push({id, q, a, sec:"1.2", exam:"1201", box:2, due:"2026-11-15", t:Date.parse(D+"T12:00:00")+10+i}); });
     s.v = 25;
+  }
+  if(s.v<26){
+    // v26: the 1.3 (mobile connectivity) study session from 2026-11-12 and its quiz cards
+    const L = s.learn = s.learn || {skills:[], log:[], summary:null}, D = "2026-11-12";
+    L.skills = L.skills || []; L.log = L.log || []; const cards = L.cards = L.cards || [];
+    let it = L.skills.find(x=>/^\s*IT\s*$/i.test(x.name)) || L.skills[0];
+    if(!it){ it = {id:uid(), name:"IT", icon:""}; L.skills.push(it); }
+    if(!L.log.some(e=>e.id==="aplus-13")) L.log.push({id:"aplus-13", skill:it.id, date:D, sec:"1.3", exam:"1201", t:Date.parse(D+"T13:00:00"),
+      text:`Watched Professor Messer 220-1201, 1.3 Mobile connectivity.
+
+Airplane mode turns off all the radios (cellular, Wi-Fi, Bluetooth); Wi-Fi and Bluetooth can be switched back on while cellular stays off. 5G is faster with lower latency than 4G/LTE, but its fastest bands reach less far, so 4G still covers more area. GPS gets location from satellites with no cell signal or internet; location services also use cell towers and Wi-Fi when they're around.
+
+Company phones: MDM (Mobile Device Management) controls the whole device: passcodes, remote wipe, approved apps. MAM (Mobile Application Management) controls only the work apps and their data, which suits BYOD (Bring Your Own Device): work data sits in its own container on a personal phone and can be wiped without touching personal stuff. Synchronization brings contacts, calendar and email to a new phone from the cloud account (iCloud, Google, Microsoft 365 / Exchange). A hotspot should have a strong password with WPA2 or WPA3.
+
+Quiz, 8 questions, about 5 right. Strong on: airplane mode, 5G vs 4G, MDM, BYOD containers, synchronization. Missed or half: Wi-Fi and Bluetooth still allowed in airplane mode, GPS working without signal, where synced data comes from, hotspot security, MDM vs MAM.`,
+      fuzzy:`MDM (whole device) vs MAM (just work apps) · hotspot: strong password + WPA2/WPA3 · airplane mode still allows Wi-Fi and Bluetooth`});
+    const rt = (s.routines||[]).find(r=>/^it study/i.test(r.name));
+    if(rt){ const a = (s.rdone = s.rdone || {})[rt.id] = (s.rdone[rt.id] || []); if(!a.includes(D)){ a.push(D); a.sort(); } }
+    // [question, answer, 1 = missed or half (due now), 2 = right (back on Sunday)]
+    [
+      ["What does airplane mode turn off, and can Wi-Fi and Bluetooth still be used?", "It turns off every radio: cellular, Wi-Fi and Bluetooth. Wi-Fi and Bluetooth can be switched back on while airplane mode stays on; cellular stays off.", 1],
+      ["4G/LTE vs 5G: which is faster, and which usually covers more area?", "5G is faster (up to gigabit speeds) with lower latency. 4G/LTE covers more area, because 5G's fastest bands only reach short distances.", 2],
+      ["A phone shows its location in the middle of nowhere with no cell signal. What's providing it?", "GPS: satellites, with no cell signal or internet needed. Location services also use cell towers and Wi-Fi when they're available, for a faster or more exact fix.", 1],
+      ["A company wants every work phone to have a passcode, be wipeable if lost, and only run approved apps. What's that called?", "MDM: Mobile Device Management.", 2],
+      ["What does BYOD stand for, and how is company data kept separate on a personal phone?", "Bring Your Own Device. Work data goes in its own container (partition) on the phone, so the company can manage or wipe it without touching personal data. The worry: company data on a device the company doesn't fully control (lost phones, malware, people leaving).", 2],
+      ["A new phone should get the user's contacts, calendar and email automatically. What's that called, and where does the data come from?", "Synchronization, from the user's cloud account: iCloud, Google, or Microsoft 365 / Exchange for work.", 1],
+      ["How should a phone hotspot be set up so strangers can't join?", "A strong password with WPA2 or WPA3 security. Changing the default network name and limiting connected devices helps too.", 1],
+      ["What's the difference between MDM and MAM?", "MDM (Mobile Device Management) controls the whole device: passcode, settings, full wipe. MAM (Mobile Application Management) controls only the work apps and their data, so it can wipe just those. MAM suits BYOD.", 1]
+    ].forEach(([q, a, b], i)=>{ const id = "aplus-13-"+i; if(!cards.some(c=>c.id===id)) cards.push({id, q, a, sec:"1.3", exam:"1201", box:b, due:b>1 ? "2026-11-15" : D, t:Date.parse(D+"T13:00:00")+i}); });
+    s.v = 26;
   }
   return s;
 }
