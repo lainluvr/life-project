@@ -1333,7 +1333,7 @@ function CAT_SEED(){
     C("🎮","Fun on purpose","life","#e3a92b","mental")
   ];
 }
-const DATA_V = 22;
+const DATA_V = 23;
 function defaults(){
   return {
     v:DATA_V, totalXp:0, maxLevel:1, best:0,
@@ -1567,21 +1567,27 @@ Quiz, 3 rounds and 15 questions. Strong on: SSD as the cheap speed upgrade, sold
         ["What kind of memory stick do laptops use?", "SO-DIMM: a smaller version of the desktop DIMM.", 1],
         ["What does NFC stand for, and what is it used for?", "Near Field Communication. Only works within a few centimeters: tap to pay (Apple Pay, Google Wallet), door and building badges, tap-to-pair devices.", 1],
         ["A laptop battery dies after an hour. It used to last five. Most likely cause and fix?", "Lithium-ion batteries wear out with age and charge cycles and hold less charge. Fix: replace the battery. Check its health with: powercfg /batteryreport", 1],
-        ["You open a laptop and see a small, flat, stick-shaped slot instead of a space for a regular drive. What goes there?", "An M.2 SSD (no moving parts). HDDs are the bigger 2.5\" (laptop) or 3.5\" (desktop) boxes. M.2 = stick = SSD.", 1],
+        ["You open a laptop and see a small, flat, stick-shaped slot instead of a space for a regular drive. What goes there?", "An M.2 SSD (no moving parts). M.2 = stick = SSD.", 1],
         ["Someone works in coffee shops and worries about people reading their screen. What hardware helps?", "A privacy screen: a filter over the display so anyone looking from an angle sees black.", 2],
         ["A laptop keyboard has a few dead keys. What can you try before replacing the keyboard?", "Clean it with compressed air; reseat or replace the keycap; plug in a USB keyboard. If the keys work there, the laptop keyboard is the problem (hardware). If not, it's software (driver or keyboard language/layout).", 2],
         ["\"My laptop can't connect to Wi-Fi, and the Wi-Fi option is missing from settings.\" Which replaceable part might be the problem?", "The wireless card: failed, loose, or missing its driver, so Windows can't see it. Check Device Manager > Network adapters. Before opening anything, check airplane mode and the Fn Wi-Fi key.", 1],
         ["Why would a company want fingerprint login instead of only passwords?", "Fingerprints can't be shared, written down, guessed or phished, and logging in is faster. Fingerprint = something you are, password = something you know, phone or badge = something you have.", 2],
         ["A laptop has a 2.5\" drive bay and an M.2 slot. Which holds only a no-moving-parts drive, and which can hold either kind?", "M.2 = SSD only. The 2.5\" bay holds an HDD or a 2.5\" SSD, which is why swapping an old HDD for a 2.5\" SSD is an easy upgrade.", 1],
-        ["\"Never charge your phone until it hits 0% or the battery remembers the lower amount.\" True for a modern phone?", "No. Lithium-ion has no memory effect (that was old NiCd batteries). Draining to 0% actually wears lithium out faster; about 20-80% is gentlest, which is why iPhones have Optimized Charging (holds at 80%).", 1],
-        ["Logging in needs a password AND a fingerprint. What's that called, and which two factor types are they?", "MFA: Multi-Factor Authentication. Password = something you know, fingerprint = something you are. (Not NFC, which is tap to pay.)", 1],
-        ["8 GB of RAM, slow with lots of tabs, and the RAM is soldered. How do you check, and what are the options?", "Check Task Manager > Performance > Memory (amount and \"Slots used\"), not Device Manager. Open slot: add a SO-DIMM. All soldered: fewer tabs, the browser's memory saver, cut startup programs, or eventually replace the laptop.", 1],
-        ["Tap to pay fails at a store, but everything else on the phone works. What do you check first?", "NFC: is it turned on (Android), and is the card set up in the wallet app (Apple Pay or Google Wallet)? Not Bluetooth.", 1],
+        ["\"Never charge your phone until it hits 0% or the battery remembers the lower amount.\" True for a modern phone?", "No. Lithium-ion batteries have no memory effect. Draining to 0% wears them out faster; about 20-80% is gentlest, which is why iPhones have Optimized Charging (holds at 80%).", 1],
+        ["Logging in needs a password AND a fingerprint. What's that called, and which two factor types are they?", "MFA: Multi-Factor Authentication. Password = something you know, fingerprint = something you are.", 1],
+        ["8 GB of RAM, slow with lots of tabs, and the RAM is soldered. How do you check, and what are the options?", "Check Task Manager > Performance > Memory (amount and \"Slots used\"). Open slot: add a SO-DIMM. All soldered: fewer tabs, the browser's memory saver, cut startup programs, or eventually replace the laptop.", 1],
+        ["Tap to pay fails at a store, but everything else on the phone works. What do you check first?", "NFC: is it turned on (Android), and is the card set up in the wallet app (Apple Pay or Google Wallet)?", 1],
         ["A laptop won't charge. What do you check before assuming the battery is dead?", "The charger and cable (frayed or bent), the charging port, a different outlet, the charging light, that the charger is the right wattage, and powercfg /batteryreport for battery health.", 2]
       ];
       L.cards = C.map(([q, a, b], i)=>({id:"aplus-c"+i, q, a, sec:"1.1", exam:"1201", box:b, due:b>1 ? "2026-11-14" : D, t:Date.parse(D+"T12:00:00")+i}));
     }
     s.v = 22;
+  }
+  if(s.v<23){
+    // v23: keep the 1.1 flashcards clean: answers only, no "not this" asides
+    const fix = [["aplus-c6", " HDDs are the bigger 2.5\" (laptop) or 3.5\" (desktop) boxes. M.2 = stick = SSD.", " M.2 = stick = SSD."], ["aplus-c12", "No. Lithium-ion has no memory effect (that was old NiCd batteries). Draining to 0% actually wears lithium out faster;", "No. Lithium-ion batteries have no memory effect. Draining to 0% wears them out faster;"], ["aplus-c13", " (Not NFC, which is tap to pay.)", ""], ["aplus-c14", ", not Device Manager.", "."], ["aplus-c15", "? Not Bluetooth.", "?"]];
+    for(const [id, a, b] of fix){ const c = ((s.learn||{}).cards||[]).find(x=>x.id===id); if(c && c.a.includes(a)) c.a = c.a.replace(a, b); }
+    s.v = 23;
   }
   return s;
 }
