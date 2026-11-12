@@ -432,6 +432,27 @@ body.nagfix{padding-bottom:190px}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-bottom:4px;flex-wrap:wrap}
 .legend i{display:inline-block;width:12px;height:4px;border-radius:2px;vertical-align:middle;margin-right:5px}
 .spark{width:120px;height:32px;flex:none}
+.wtform{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:4px}
+.wtform label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--muted);flex:1 1 110px;min-width:0}
+.wtform input{padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:inherit;width:100%;box-sizing:border-box;min-width:0}
+.wtin{display:flex;align-items:center;gap:6px} .wtin small{color:var(--muted);font-weight:400}
+.wtform .btn{flex:0 0 auto}
+.wtstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0 6px}
+.wtstats div{background:var(--panel2);border-radius:10px;padding:8px 10px;min-width:0}
+.wtstats b{display:block;font-size:18px;font-variant-numeric:tabular-nums}
+.wtstats small{color:var(--muted);font-size:11px}
+.wtchart{width:100%;height:auto;display:block;margin:6px 0 2px}
+.wtchart text{font-size:12px;fill:var(--muted)}
+.wtchart .grid{stroke:var(--line);stroke-dasharray:3 4}
+.wtchart polyline{fill:none;stroke-width:2;stroke-linejoin:round}
+.wtchart polyline.am{stroke:var(--accent)} .wtchart polyline.pm{stroke:var(--muted);stroke-dasharray:4 4;opacity:.7}
+.wtchart circle.am{fill:var(--accent)} .wtchart circle.pm{fill:var(--muted);opacity:.8} .wtchart circle.start{fill:none;stroke:var(--text);stroke-width:2}
+.wtkey i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.wtkey i.am{background:var(--accent)} .wtkey i.pm{background:var(--muted)} .wtkey i.start{border:2px solid var(--text);box-sizing:border-box}
+.wtrow{display:flex;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line);font-size:13.5px;font-variant-numeric:tabular-nums}
+.wtrow span:first-child{flex:1;min-width:0}
+.wtrow span:nth-child(2),.wtrow span:nth-child(3){width:74px;flex:none}
+.wtrow .sw{color:var(--muted);width:46px;text-align:right;flex:none}
 .ach{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px}
 .achi{background:var(--panel2);border-radius:12px;padding:10px 8px;text-align:center;border:2px solid var(--gold)}
 .achi.locked{border-color:transparent;opacity:.5;filter:grayscale(1)}
@@ -778,6 +799,21 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
         <input name="unit" placeholder="Unit (cups…)" maxlength="15">
         <button class="btn primary">Add</button>
       </form>
+    </details>
+  </div>
+
+  <div class="card" id="wtCard">
+    <div class="cardhead"><h2>⚖️ Weight</h2><small id="wtToday"></small></div>
+    <form id="wtForm" class="wtform">
+      <label>🌅 Morning<span class="wtin"><input name="am" type="number" step="0.1" min="40" max="700" inputmode="decimal" placeholder="—" aria-label="Morning weight in pounds"><small>lb</small></span></label>
+      <label>🌙 Night<span class="wtin"><input name="pm" type="number" step="0.1" min="40" max="700" inputmode="decimal" placeholder="—" aria-label="Night weight in pounds"><small>lb</small></span></label>
+      <label>Day<input name="date" type="date" required></label>
+      <button class="btn primary">Save</button>
+    </form>
+    <div id="wtBody"></div>
+    <details class="calest">
+      <summary>How to weigh in</summary>
+      <p class="sub"><b>Morning</b> is your real number: right after waking up and using the bathroom, before eating or drinking. Same scale, same spot, similar clothes. <b>Night</b> is usually 1–4 lb higher from the day's food and water. That's normal, not fat. Judge progress by the <b>7-day average of your mornings</b>, never one day. For gaining, about 0.5–1 lb a week is a healthy pace; if it stays flat for 2–3 weeks, add about 200 kcal a day.</p>
     </details>
   </div>
 
@@ -1334,7 +1370,7 @@ function CAT_SEED(){
     C("🎮","Fun on purpose","life","#e3a92b","mental")
   ];
 }
-const DATA_V = 27;
+const DATA_V = 28;
 function defaults(){
   return {
     v:DATA_V, totalXp:0, maxLevel:1, best:0,
@@ -1665,6 +1701,13 @@ Quiz, 8 questions, about 5 right. Strong on: airplane mode, 5G vs 4G, MDM, BYOD 
     set(/^morning workout$/i, {every:3});
     set(/^in.?between$/i, {every:3});
     s.v = 27;
+  }
+  if(s.v<28){
+    // v28: weight tracking (morning and night weigh-ins), the first check from 2026-11-12, and a "Weigh in" routine
+    if(!s.weight) s.weight = {log:{}, start:{date:"2026-11-12", v:133, note:"afternoon check, after starting 2,300 kcal a day"}};
+    s.routines = s.routines || [];
+    if(!s.routines.some(r=>/^weigh.?in/i.test(r.name))) s.routines.push({id:uid(), name:"Weigh in", icon:"⚖️", area:"health", every:1, times:2});
+    s.v = 28;
   }
   return s;
 }
@@ -2299,6 +2342,78 @@ function nStep(id, dir){
   }
   save(); renderAll();
 }
+/* ---------- weight: a morning and a night weigh-in per day; the 7-day average of mornings is the real trend ---------- */
+// S.weight = {log:{"YYYY-MM-DD":{am, pm}}, start:{date, v, note}|null}, in lb
+const WT = () => S.weight || (S.weight = {log:{}, start:null});
+const wtAvg = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
+const wtF = v => (Math.round(v*10)/10).toFixed(1);
+const wtSign = v => (v>0 ? "+" : v<0 ? "−" : "±") + wtF(Math.abs(v));
+const wtMorn = (from, to) => dRange(from, to).map(d=>(WT().log[d]||{}).am).filter(v=>typeof v==="number");
+let wtFilledFor = null;
+function wtWeighRoutine(){ return S.routines.find(r=>/^weigh.?in/i.test(r.name)); }
+function renderWeight(){
+  const W = WT(), L = W.log, t = today(), f = $("wtForm").elements;
+  if(!f.date.value) f.date.value = t;
+  const d = f.date.value;
+  if(wtFilledFor!==d){ const e = L[d] || {}; f.am.value = e.am ?? ""; f.pm.value = e.pm ?? ""; wtFilledFor = d; }
+  const te = L[t] || {};
+  $("wtToday").textContent = `today: ${typeof te.am==="number" ? "🌅 ✓" : "🌅 —"}  ${typeof te.pm==="number" ? "🌙 ✓" : "🌙 —"}`;
+  // the numbers
+  const a7 = wtAvg(wtMorn(shiftDate(t,-6), t)), p7 = wtAvg(wtMorn(shiftDate(t,-13), shiftDate(t,-7)));
+  const rate = a7!==null && p7!==null ? a7 - p7 : null;
+  const days = Object.keys(L).sort(), lastAm = days.slice().reverse().map(x=>L[x].am).find(v=>typeof v==="number");
+  const st = W.start, since = st && typeof lastAm==="number" ? lastAm - st.v : null;
+  const stat = (v, l) => `<div><b>${v}</b><small>${l}</small></div>`;
+  let msg;
+  if(!days.length) msg = `Weigh in tomorrow morning, right after you wake up. The trend shows after a few mornings.`;
+  else if(rate===null) msg = `Keep logging mornings. After two weeks you'll see how fast you're gaining per week.`;
+  else if(rate>=0.25 && rate<=1.2) msg = `✓ On track: a healthy pace for gaining.`;
+  else if(rate>1.2) msg = `Gaining fast. Early on that's mostly water and food in your system; it settles after a couple of weeks.`;
+  else msg = `Slower than planned. If the average stays flat for 2–3 weeks, add about 200 kcal a day.`;
+  // last 30 days chart: mornings solid, nights faint, the starting reading as a ring
+  const from = shiftDate(t,-29), ds = dRange(from, t), pts = [];
+  ds.forEach((x,i)=>{ const e = L[x]; if(!e) return; if(typeof e.am==="number") pts.push([i,e.am,"am"]); if(typeof e.pm==="number") pts.push([i,e.pm,"pm"]); });
+  const si = st && st.date>=from ? ds.indexOf(st.date) : -1;
+  if(si>=0) pts.push([si, st.v, "start"]);
+  let chart = "";
+  if(pts.length){
+    const Wd = 400, H = 150, Lm = 34, top = 10, bot = 20, vs = pts.map(p=>p[1]);
+    let lo = Math.min(...vs), hi = Math.max(...vs); if(hi-lo<4){ const m = (hi+lo)/2; lo = m-2; hi = m+2; }
+    const X = i => Lm + (Wd-Lm-8)*i/29, Y = v => top + (hi-v)/(hi-lo)*(H-top-bot);
+    const line = k => { const p = pts.filter(q=>q[2]===k).sort((a,b)=>a[0]-b[0]); return p.length>1 ? `<polyline points="${p.map(q=>`${X(q[0]).toFixed(1)},${Y(q[1]).toFixed(1)}`).join(" ")}" class="${k}"/>` : ""; };
+    chart = `<svg viewBox="0 0 ${Wd} ${H}" class="wtchart" role="img" aria-label="Weight over the last 30 days">`
+      + [hi, (hi+lo)/2, lo].map(v=>`<line x1="${Lm}" x2="${Wd}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" class="grid"/><text x="${Lm-6}" y="${(Y(v)+3).toFixed(1)}" text-anchor="end">${Math.round(v)}</text>`).join("")
+      + line("pm") + line("am")
+      + pts.map(([i,v,k])=>`<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${k==="am"?3.5:3}" class="${k}"><title>${niceDate(ds[i])}: ${k==="am" ? "morning" : k==="pm" ? "night" : "starting check"} ${wtF(v)} lb</title></circle>`).join("")
+      + `<text x="${Lm}" y="${H-4}">${niceDate(from).replace(/, \d{4}$/,"")}</text><text x="${Wd}" y="${H-4}" text-anchor="end">today</text></svg>`
+      + `<div class="ksum wtkey"><span><i class="am"></i>morning</span><span><i class="pm"></i>night</span>${si>=0 ? `<span><i class="start"></i>first check</span>` : ""}</div>`;
+  }
+  const recent = days.slice(-7).reverse();
+  $("wtBody").innerHTML = `<div class="wtstats">${stat(a7!==null ? wtF(a7)+" lb" : "—", "7-day morning avg")}${stat(rate!==null ? wtSign(rate)+" lb" : "—", "vs the week before")}${stat(since!==null ? wtSign(since)+" lb" : st ? wtF(st.v)+" lb" : "—", st ? `${since!==null ? "since" : "first check,"} ${niceDate(st.date).replace(/, \d{4}$/,"")}` : "since you started")}</div>
+    <p class="sub" style="margin:4px 0 8px">${msg}</p>${chart}
+    ${recent.length ? `<div class="sectlabel">Recent</div>` + recent.map(x=>{ const e = L[x], sw = typeof e.am==="number" && typeof e.pm==="number" ? e.pm - e.am : null;
+      return `<div class="wtrow"><span>${x===t ? "Today" : niceDate(x).replace(/, \d{4}$/,"")}</span><span>🌅 ${typeof e.am==="number" ? wtF(e.am) : "—"}</span><span>🌙 ${typeof e.pm==="number" ? wtF(e.pm) : "—"}</span><span class="sw" title="Night minus morning: food and water, not fat">${sw!==null ? wtSign(sw) : ""}</span><button class="x" data-act="wtDel" data-id="${x}" title="Delete this day">×</button></div>`; }).join("") : ""}
+    ${st ? `<small class="sub" style="display:block;margin-top:8px">First check: ${wtF(st.v)} lb on ${niceDate(st.date)}${st.note ? ` (${esc(st.note)})` : ""}.</small>` : ""}`;
+}
+$("wtForm").addEventListener("change", e=>{ if(e.target.name==="date"){ wtFilledFor = null; renderWeight(); } });
+$("wtForm").addEventListener("submit", e=>{
+  e.preventDefault(); const f = e.target.elements, d = f.date.value || today();
+  const num = x => { const v = parseFloat(x); return isFinite(v) && v>=40 && v<=700 ? Math.round(v*10)/10 : null; };
+  const am = num(f.am.value), pm = num(f.pm.value), L = WT().log, old = L[d] || {};
+  if((f.am.value.trim() && am===null) || (f.pm.value.trim() && pm===null)){ toast("That doesn't look like a weight in lb."); return; }
+  if(am===null && pm===null){
+    if(L[d] && confirm(`Delete the weigh-ins for ${niceDate(d)}?`)){ delete L[d]; wtFilledFor = null; save(); renderAll(); } else if(!L[d]) toast("Type a weight first.");
+    return;
+  }
+  const n = {}; if(am!==null) n.am = am; if(pm!==null) n.pm = pm; L[d] = n;
+  // each new weigh-in also ticks off the "Weigh in" routine for that day
+  const rt = wtWeighRoutine();
+  if(rt){ const a = S.rdone[rt.id] || (S.rdone[rt.id] = []), add = (typeof old.am!=="number" && am!==null ? 1 : 0) + (typeof old.pm!=="number" && pm!==null ? 1 : 0);
+    for(let i=0; i<add && a.filter(x=>x===d).length<(rt.times||1); i++) a.push(d); a.sort(); }
+  addLog(`Weight ${niceDate(d)}: ${am!==null ? `morning ${wtF(am)} lb` : ""}${am!==null && pm!==null ? ", " : ""}${pm!==null ? `night ${wtF(pm)} lb` : ""}`);
+  wtFilledFor = null; save(); renderAll();
+  toast(`⚖️ Saved${am!==null ? ` · 🌅 ${wtF(am)}` : ""}${pm!==null ? ` · 🌙 ${wtF(pm)}` : ""} lb`);
+});
 function renderNutri(){
   const t = today();
   const hit = S.nutri.filter(n=>nCount(n,t)>=n.target).length;
@@ -3516,10 +3631,14 @@ function stTimeChart(B){
   return s + stAxis(B, X, H) + `</svg>`;
 }
 // A Measurement called something like "weight" is drawn as a line over the calorie bars
-function weightMetric(){ return S.metrics.find(m=>/weigh|body ?mass|\bbw\b/i.test(m.name)) || null; }
+function weightMetric(){
+  const L = (S.weight||{}).log || {}, ks = Object.keys(L);
+  if(ks.length){ const log = {}; ks.forEach(d=>{ const e = L[d], v = typeof e.am==="number" ? e.am : e.pm; if(typeof v==="number") log[d] = v; }); return {id:"__wt", name:"Weight (mornings)", unit:"lb", log}; }
+  const m = S.metrics.find(m=>/weigh|body ?mass|\bbw\b/i.test(m.name)); return m ? {...m, log:S.mlog[m.id] || {}} : null;
+}
 function weightLine(B, X, H, Bt, top, W){
   const m = weightMetric(); if(!m) return "";
-  const log = S.mlog[m.id] || {};
+  const log = m.log;
   const vals = B.map(b=>{ const vs = dRange(b.from, b.to).map(d=>log[d]).filter(v=>typeof v==="number" && isFinite(v)); return vs.length ? vs.reduce((a,c)=>a+c,0)/vs.length : null; });
   const pts = vals.map((v,i)=>v===null ? null : [i,v]).filter(Boolean);
   if(!pts.length) return "";
@@ -3539,7 +3658,7 @@ const L_CAL = 44;
 function stCalChart(B){
   const W = 600, H = 190, L = 40, Bt = 18, top = 8, n = B.length, slot = (W-L)/n, bw = Math.max(3, slot*0.7), tgt = calTarget();
   const X = i => L + slot*i + slot/2;
-  const wm = weightMetric(), hasW = wm && B.some(b=>dRange(b.from,b.to).some(d=>typeof (S.mlog[wm.id]||{})[d]==="number"));
+  const wm = weightMetric(), hasW = wm && B.some(b=>dRange(b.from,b.to).some(d=>typeof wm.log[d]==="number"));
   if(!hasW && !B.some(b=>dRange(b.from,b.to).some(d=>dayFood(d).length))) return `<div class="empty">No food logged in this stretch yet.</div>`;
   let s = `<svg viewBox="0 0 ${W} ${H}" class="stchart" role="img" aria-label="Calories">`;
   if(B[0].day){
@@ -3739,7 +3858,7 @@ function applyTheme(){
 }
 function renderAll(){
   TT = timeTotals();
-  renderHeader(); renderRoutines(); renderNutri(); renderCareTop();
+  renderHeader(); renderRoutines(); renderNutri(); renderWeight(); renderCareTop();
   renderBrain(); renderTime(); renderPut(); renderProgress(); renderReview(); renderLog();
   applyTheme(); renderDash(); renderAlarm(); renderSetTabs();
   hyperTick();
@@ -3878,6 +3997,7 @@ document.addEventListener("click", e=>{
       (S.mlog[id] || (S.mlog[id] = {}))[today()] = v; addLog(`Logged ${m.name}: ${v} ${m.unit}`);
       save(); renderAll(); toast(`📏 ${m.name}: ${v} ${m.unit} saved`); break;
     }
+    case "wtDel": { const L = WT().log; if(L[id] && confirm(`Delete the weigh-ins for ${niceDate(id)}?`)){ delete L[id]; wtFilledFor = null; save(); renderAll(); } break; }
     case "delMetric": { const m = S.metrics.find(x=>x.id===id); if(m && confirm(`Remove "${m.name}" and all its entries?`)){ S.metrics = S.metrics.filter(x=>x.id!==id); delete S.mlog[id]; save(); renderAll(); } break; }
     case "skNew": skOpen(null); break;
     case "skEdit": { const s = skOf(id); if(s) skOpen(s); break; }
