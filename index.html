@@ -339,13 +339,16 @@ body.nagfix{padding-bottom:190px}
 .seg{display:flex;gap:4px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:10px}
 .seg button{flex:1;border:0;background:none;border-radius:9px;padding:8px 6px;cursor:pointer;color:var(--muted);font:inherit;font-weight:600;font-size:14px}
 .seg button.on{background:var(--panel);color:var(--text);box-shadow:var(--shadow)}
+.carebar{max-width:520px;margin:0 auto 14px}
 /* Focus modes */
 #tab-care[data-focus="nutrition"] .carer,
 #tab-care[data-focus="routines"] .carel{display:none}
 #tab-care:not([data-focus="all"]) .care{grid-template-columns:minmax(0,1fr)}
 @media (min-width:1000px){
-  #tab-care[data-focus="nutrition"] .carel{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:0 14px;align-items:start}
-  #tab-care[data-focus="nutrition"] #calCard{grid-row:span 2}
+  #tab-care[data-focus="nutrition"] .carel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"cal food" "wt food";gap:0 14px;align-items:start}
+  #tab-care[data-focus="nutrition"] #calCard{grid-area:cal}
+  #tab-care[data-focus="nutrition"] #foodCard{grid-area:food}
+  #tab-care[data-focus="nutrition"] #wtCard{grid-area:wt}
   #tab-care[data-focus="routines"] #routines{columns:2;column-gap:14px}
   #tab-care[data-focus="routines"] #routines .rt{break-inside:avoid}
 }
@@ -755,7 +758,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 <!-- CARE -->
 <section id="tab-care" data-focus="all">
  <div class="card covw">
-  <div class="cardhead"><h2>🌿 Care overview</h2><div class="chips" id="careFocus" style="margin:0"></div></div>
+  <div class="cardhead"><h2>🌿 Care overview</h2></div>
   <div class="ctiles" id="careTiles"></div>
   <div class="sectlabel" style="margin-top:16px">How each day went</div>
   <div id="cdWeek"></div>
@@ -770,6 +773,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
   </details>
   <div class="ksum" id="cdKey" style="margin-top:8px"></div>
  </div>
+ <div class="seg carebar" id="careFocus" role="tablist" aria-label="What to show"></div>
  <div class="care">
   <div class="carel">
   <div class="card core" id="calCard">
@@ -788,60 +792,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
       <div class="ksum" id="calYearKey" style="margin:6px 0 10px"></div>
       <div class="cyear" id="calYear"></div>
     </details>
-    <div class="sectlabel" style="display:flex;justify-content:space-between;align-items:baseline"><span>💧 Water &amp; other trackers</span><small id="nutriCount"></small></div>
-    <div id="nutri"></div>
-    <details class="calest">
-      <summary>Add a tracker</summary>
-      <form id="nutriForm" class="row">
-        <input name="icon" placeholder="🍎" maxlength="4" style="flex:0 0 64px" aria-label="Emoji">
-        <input name="name" placeholder="New tracker (e.g. Fiber)" required maxlength="40">
-        <input name="target" type="number" min="1" placeholder="Daily goal" required>
-        <input name="unit" placeholder="Unit (cups…)" maxlength="15">
-        <button class="btn primary">Add</button>
-      </form>
-    </details>
-  </div>
-
-  <div class="card" id="wtCard">
-    <div class="cardhead"><h2>⚖️ Weight</h2><small id="wtToday"></small></div>
-    <form id="wtForm" class="wtform">
-      <label>🌅 Morning<span class="wtin"><input name="am" type="number" step="0.1" min="40" max="700" inputmode="decimal" placeholder="—" aria-label="Morning weight in pounds"><small>lb</small></span></label>
-      <label>🌙 Night<span class="wtin"><input name="pm" type="number" step="0.1" min="40" max="700" inputmode="decimal" placeholder="—" aria-label="Night weight in pounds"><small>lb</small></span></label>
-      <label>Day<input name="date" type="date" required></label>
-      <button class="btn primary">Save</button>
-    </form>
-    <div id="wtBody"></div>
-    <details class="calest">
-      <summary>How to weigh in</summary>
-      <p class="sub"><b>Morning</b> is your real number: right after waking up and using the bathroom, before eating or drinking. Same scale, same spot, similar clothes. <b>Night</b> is usually 1–4 lb higher from the day's food and water. That's normal, not fat. Judge progress by the <b>7-day average of your mornings</b>, never one day. For gaining, about 0.5–1 lb a week is a healthy pace; if it stays flat for 2–3 weeks, add about 200 kcal a day.</p>
-    </details>
-  </div>
-
-  <div class="card">
-    <h2>🍽️ Food log</h2>
-    <div id="calLog"></div>
-    <div class="sectlabel">Log something</div>
-    <form id="calForm" class="row">
-      <select name="meal" id="calMeal" style="flex:0 1 120px" aria-label="Meal">
-        <option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option>
-      </select>
-      <input name="text" placeholder="Food (optional)" maxlength="100" aria-label="Food">
-      <input name="kcal" type="number" min="0" max="9999" placeholder="kcal" required style="flex:0 1 90px" aria-label="Calories">
-      <input name="p" type="number" min="0" max="999" placeholder="protein g" style="flex:0 1 100px" aria-label="Protein grams (optional)">
-      <label class="chk"><input type="checkbox" name="keep"> save to My foods</label>
-      <button class="btn primary">Log</button>
-    </form>
-    <div class="sectlabel">Don't know the number? Rough guess is fine</div>
-    <div class="chips" id="calGuess"></div>
-    <div class="sectlabel">My foods <small>(tap to log)</small></div>
-    <div class="chips" id="calMine"></div>
-    <div class="sectlabel">Recent</div>
-    <div class="chips" id="calRecent"></div>
-    <div class="row"><button class="btn" data-act="calCopy">⧉ Copy yesterday's food to this day</button></div>
-  </div>
-
-  <div class="card">
-    <h2>🎯 Daily calorie target</h2>
+    <details class="calest" id="calTgtBox">
+      <summary id="calTgtSum">🎯 Daily calorie target</summary>
+      <div style="margin-top:8px">
     <div class="row">
       <input type="number" id="calTarget" min="800" max="6000" step="10" placeholder="e.g. 2000" style="flex:0 1 140px" aria-label="Daily calorie target">
       <select id="calMode" style="flex:0 1 230px" aria-label="Kind of target">
@@ -869,7 +822,60 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
       </form>
       <div id="estOut"></div>
     </details>
+      </div>
+    </details>
+    <div class="sectlabel" style="display:flex;justify-content:space-between;align-items:baseline"><span>💧 Water &amp; other trackers</span><small id="nutriCount"></small></div>
+    <div id="nutri"></div>
+    <details class="calest">
+      <summary>Add a tracker</summary>
+      <form id="nutriForm" class="row">
+        <input name="icon" placeholder="🍎" maxlength="4" style="flex:0 0 64px" aria-label="Emoji">
+        <input name="name" placeholder="New tracker (e.g. Fiber)" required maxlength="40">
+        <input name="target" type="number" min="1" placeholder="Daily goal" required>
+        <input name="unit" placeholder="Unit (cups…)" maxlength="15">
+        <button class="btn primary">Add</button>
+      </form>
+    </details>
   </div>
+
+  <div class="card" id="foodCard">
+    <h2>🍽️ Food log</h2>
+    <div id="calLog"></div>
+    <div class="sectlabel">Log something</div>
+    <form id="calForm" class="row">
+      <select name="meal" id="calMeal" style="flex:0 1 120px" aria-label="Meal">
+        <option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option>
+      </select>
+      <input name="text" placeholder="Food (optional)" maxlength="100" aria-label="Food">
+      <input name="kcal" type="number" min="0" max="9999" placeholder="kcal" required style="flex:0 1 90px" aria-label="Calories">
+      <input name="p" type="number" min="0" max="999" placeholder="protein g" style="flex:0 1 100px" aria-label="Protein grams (optional)">
+      <label class="chk"><input type="checkbox" name="keep"> save to My foods</label>
+      <button class="btn primary">Log</button>
+    </form>
+    <div class="sectlabel">Don't know the number? Rough guess is fine</div>
+    <div class="chips" id="calGuess"></div>
+    <div class="sectlabel">My foods <small>(tap to log)</small></div>
+    <div class="chips" id="calMine"></div>
+    <div class="sectlabel">Recent</div>
+    <div class="chips" id="calRecent"></div>
+    <div class="row"><button class="btn" data-act="calCopy">⧉ Copy yesterday's food to this day</button></div>
+  </div>
+
+  <div class="card" id="wtCard">
+    <div class="cardhead"><h2>⚖️ Weight</h2><small id="wtToday"></small></div>
+    <form id="wtForm" class="wtform">
+      <label>🌅 Morning<span class="wtin"><input name="am" type="number" step="0.1" min="40" max="700" inputmode="decimal" placeholder="—" aria-label="Morning weight in pounds"><small>lb</small></span></label>
+      <label>🌙 Night<span class="wtin"><input name="pm" type="number" step="0.1" min="40" max="700" inputmode="decimal" placeholder="—" aria-label="Night weight in pounds"><small>lb</small></span></label>
+      <label>Day<input name="date" type="date" required></label>
+      <button class="btn primary">Save</button>
+    </form>
+    <div id="wtBody"></div>
+    <details class="calest">
+      <summary>How to weigh in</summary>
+      <p class="sub"><b>Morning</b> is your real number: right after waking up and using the bathroom, before eating or drinking. Same scale, same spot, similar clothes. <b>Night</b> is usually 1–4 lb higher from the day's food and water. That's normal, not fat. Judge progress by the <b>7-day average of your mornings</b>, never one day. For gaining, about 0.5–1 lb a week is a healthy pace; if it stays flat for 2–3 weeks, add about 200 kcal a day.</p>
+    </details>
+  </div>
+
   </div>
 
   <div class="carer">
@@ -3149,12 +3155,16 @@ function qolGuess(t){
 }
 
 
+function calTgtLabel(){
+  const t = S.cal && S.cal.target;
+  $("calTgtSum").textContent = t ? `🎯 Daily target: ${fmtK(t)} kcal (${S.cal.mode==="min" ? "reach it" : "stay under"})` : "🎯 Set a daily calorie target";
+}
 /* ---------- care overview + focus ---------- */
 const CARE_F = {all:"Everything", nutrition:"🍎 Nutrition", routines:"🧼 Routines"};
 function careApply(){
   const sec = $("tab-care"), f = CARE_F[S.careFocus] ? S.careFocus : "all";
   sec.dataset.focus = f;
-  $("careFocus").innerHTML = Object.entries(CARE_F).map(([k,v])=>`<button class="chip ${f===k?"on":""}" data-act="careFocus" data-f="${k}">${v}</button>`).join("");
+  $("careFocus").innerHTML = Object.entries(CARE_F).map(([k,v])=>`<button class="${f===k?"on":""}" data-act="careFocus" data-f="${k}" role="tab" aria-selected="${f===k}">${v}</button>`).join("");
   document.querySelectorAll("#careTiles .ctile").forEach(el=>el.classList.toggle("on", el.dataset.f===f));
 }
 // A day's care score, 0 to 1: the average of nutrition and routines
@@ -3858,7 +3868,7 @@ function applyTheme(){
 }
 function renderAll(){
   TT = timeTotals();
-  renderHeader(); renderRoutines(); renderNutri(); renderWeight(); renderCareTop();
+  renderHeader(); renderRoutines(); renderNutri(); renderWeight(); calTgtLabel(); renderCareTop();
   renderBrain(); renderTime(); renderPut(); renderProgress(); renderReview(); renderLog();
   applyTheme(); renderDash(); renderAlarm(); renderSetTabs();
   hyperTick();
