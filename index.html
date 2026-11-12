@@ -537,6 +537,39 @@ input.emo{cursor:pointer;text-align:center;font-size:19px;padding-right:20px!imp
 .lrrow{display:flex;gap:12px;align-items:flex-end}
 .lrrow>label{flex:1;min-width:0}
 .itday{margin:6px 0 4px;line-height:1.55}
+a.btn{text-decoration:none}
+.lrsub{font-family:inherit;font-size:14px;color:var(--muted);font-weight:400;margin-left:6px;letter-spacing:.5px}
+.itsteps{margin:8px 0 10px;padding-left:20px;line-height:1.6;font-size:14px}
+.fc{perspective:1200px;cursor:pointer;margin:4px 0 10px;outline:none}
+.fcin{display:grid;transition:transform .45s ease;transform-style:preserve-3d}
+.fc.flip .fcin{transform:rotateY(180deg)}
+.fcf,.fcb{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid var(--line);border-radius:14px;padding:16px 18px 12px;min-height:150px;display:flex;flex-direction:column;background:var(--panel2)}
+.fcb{transform:rotateY(180deg);border-color:var(--accent)}
+.fcf p,.fcb p{font-family:var(--serif);font-size:17px;line-height:1.5;margin:8px 0;white-space:pre-wrap;overflow-wrap:anywhere;flex:1}
+.fcf small,.fcb small{color:var(--muted);font-size:11.5px}
+.fcsec{align-self:flex-start;font-size:11px;letter-spacing:.4px;padding:1px 7px;border-radius:4px;border:1px solid var(--line);color:var(--muted)}
+.fc:focus-visible .fcf,.fc:focus-visible .fcb{outline:2px solid var(--accent)}
+.fcbtns{margin-bottom:6px} .fcbtns .btn{flex:1}
+.fcdone{margin:4px 0}
+.fcmore{margin-top:10px;border-top:1px solid var(--line);padding-top:2px}
+#fcForm textarea,#fcForm input{display:block;width:100%;margin-top:4px;padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);box-sizing:border-box;font:inherit}
+#fcForm textarea{min-height:70px;resize:vertical;line-height:1.5}
+.fcrow{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+.fcrow:last-child{border-bottom:0}
+.fcrow b{display:block;font-weight:600;font-size:13.5px} .fcrow small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;white-space:pre-wrap}
+.fcmeta{display:flex;align-items:center;gap:4px;flex:none}
+.fcbox{font-size:9px;letter-spacing:1px;color:var(--accent);white-space:nowrap}
+.lrent p.lrfz{font-size:13px;color:var(--muted)}
+.exm{padding:4px 0 10px} .exm+.exm{border-top:1px solid var(--line);padding-top:12px}
+.exm:not(.on){opacity:.7}
+.exhead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.exdom{display:flex;gap:10px;padding:7px 0} .exdom .grow{flex:1;min-width:0}
+.fcrow .grow{flex:1;min-width:0}
+.exn{font-family:var(--serif);font-weight:600;width:30px;flex:none;color:var(--muted)}
+.exrow{display:flex;justify-content:space-between;gap:8px;font-size:14px} .exrow small{color:var(--muted);white-space:nowrap}
+.exdom .bar{height:5px;background:var(--panel2);border-radius:3px;overflow:hidden;margin:4px 0}
+.exdom .bar i{display:block;height:100%;background:var(--accent);opacity:.6}
+@media (prefers-reduced-motion:reduce){ .fcin{transition:none} }
 .itday code,.wkhow code{font-size:12px;padding:1px 5px;border-radius:5px;background:var(--panel2)}
 #lrGuide small.ok{color:var(--good);font-weight:600}
 .wkt tr.on td{color:var(--accent);font-weight:700}
@@ -854,34 +887,48 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 <section id="tab-brain">
   <div class="card lr lrhead">
     <div class="cardhead">
-      <div><div class="eyebrow">Skills</div><h2 class="lrtitle">What you're learning</h2></div>
-      <div class="lrctl"><button class="btn sm primary" data-act="skNew">+ New skill</button></div>
+      <div><div class="eyebrow">Skills · CompTIA A+</div><h2 class="lrtitle" id="lrTitle">Core 1</h2></div>
     </div>
     <div class="lrstats" id="lrStats"></div>
   </div>
   <div class="lrgrid" id="lrMain">
     <div>
-      <div class="card lr" id="lrGuide" hidden></div>
+      <div class="card lr" id="lrGuide"></div>
+      <div class="card lr">
+        <div class="cardhead"><h3 class="lrh">🃏 Flashcards</h3><small id="fcSum"></small></div>
+        <div id="fcStudy"></div>
+        <details class="fcmore" id="fcAddBox"><summary id="fcAddSum">+ Add a card</summary>
+          <form id="fcForm">
+            <label>Front (the question)<textarea name="q" required maxlength="600" placeholder="e.g. What does NFC stand for?"></textarea></label>
+            <label>Back (the answer)<textarea name="a" required maxlength="1500" placeholder="e.g. Near Field Communication: tap to pay, door badges."></textarea></label>
+            <div class="lrrow"><label>Section<input name="sec" maxlength="12" placeholder="e.g. 1.2" autocomplete="off"></label></div>
+            <div class="row"><button class="btn primary">Save card</button><button type="button" class="btn" data-act="fcCancel" id="fcCancel" hidden>Cancel edit</button></div>
+          </form>
+        </details>
+        <details class="fcmore" id="fcListBox"><summary id="fcListSum">All cards</summary><div id="fcList"></div></details>
+      </div>
       <div class="card lr">
         <h3 class="lrh" id="lrFormTitle">Log a session</h3>
         <form id="lrForm">
-          <label>Skill<select name="skill" id="lrSkillSel" required></select></label>
+          <label id="lrSkillWrap">Skill<select name="skill" id="lrSkillSel" required></select></label>
           <div class="lrrow">
             <label>Date<input type="date" name="date" required></label>
+            <label>Section<input name="sec" maxlength="12" placeholder="e.g. 1.2" autocomplete="off"></label>
           </div>
-          <label>What I did<textarea name="text" required maxlength="5000" placeholder="e.g. Watched Professor Messer 1.2 on the OSI model. Layers 1–4 make sense now; still fuzzy on the session layer."></textarea></label>
+          <label>What I learned<textarea name="text" required maxlength="5000" placeholder="e.g. 1.2: laptop accessories and connections. USB-C carries power, data and video in one cable."></textarea></label>
+          <label>Still fuzzy <span class="lrnote">(optional: shows up in tomorrow's plan)</span><input name="fuzzy" maxlength="300" placeholder="e.g. Bluetooth pairing vs NFC" autocomplete="off"></label>
           <div class="row"><button class="btn primary">Save session</button><button type="button" class="btn" data-act="lrCancel" id="lrCancel" hidden>Cancel edit</button></div>
         </form>
       </div>
       <div class="card lr">
-        <div class="cardhead"><h3 class="lrh">Session log</h3><select id="lrFilter" aria-label="Filter by skill"></select></div>
+        <div class="cardhead"><h3 class="lrh">Session log</h3><small id="lrLogSum"></small></div>
         <div id="lrLog"></div>
       </div>
     </div>
     <div>
       <div class="card lr">
-        <div class="cardhead"><h3 class="lrh">Your skills</h3><small id="lrAreaSum"></small></div>
-        <div id="lrAreas"></div>
+        <div class="cardhead"><h3 class="lrh">Exam map</h3><small>what's on the tests</small></div>
+        <div id="lrMap"></div>
       </div>
       <div class="card lr">
         <div class="cardhead"><h3 class="lrh">Overview</h3><small id="lrSumDate"></small></div>
@@ -894,13 +941,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
           <textarea id="lrPasteIn" placeholder="Paste the AI's summary here…" aria-label="Summary"></textarea>
           <div class="row"><button class="btn primary" data-act="lrSumSave">Save summary</button><button class="btn" data-act="lrPasteCancel">Cancel</button></div>
         </div>
-        <small class="sub lrhow">How it works: <b>Copy for AI</b> copies every session from every skill plus instructions. Paste that into Claude (or any AI chat), then copy its answer and use <b>Paste summary</b> to keep it here.</small>
+        <small class="sub lrhow">How it works: <b>Copy for AI</b> copies every session, what was fuzzy and your weakest cards, plus instructions. Paste that into Claude (or any AI chat), then copy its answer and use <b>Paste summary</b> to keep it here.</small>
       </div>
     </div>
-  </div>
-  <div class="card lr lrempty" id="lrEmpty" hidden>
-    <p>Keep a dated record of what you practise, one skill at a time, like <i>Networking</i> or <i>Cybersecurity</i>. Over time it shows where your effort has gone, and an AI can summarize everything you've learned.</p>
-    <button class="btn primary" data-act="skNew">Add your first skill</button>
   </div>
 </section>
 
@@ -1110,7 +1153,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
   <div class="card" data-sg="help">
     <h2>How it works</h2>
     <p class="sub" style="margin:0">
-      <b>📘 Skills</b>: add the skills you're learning (Networking, Cybersecurity…) and log a session for one of them whenever you practise: the date and what you did (how long goes in the Time tab). "Your skills" ranks them by sessions; click one to see only its sessions. <b>Copy for AI</b> copies every session with instructions; paste that into Claude, then paste its answer back with <b>Paste summary</b> to keep an overview.<br><br>
+      <b>📘 Skills</b>: your CompTIA A+ study page. <b>Today's study</b> says where you are in Professor Messer's course and what to do. <b>Flashcards</b>: tap a card to flip it, then <i>Got it</i> sends it further out (1, 3, 7, 14, 30 days) and <i>Missed it</i> brings it back. Log each session with its section number and what's still fuzzy (time goes in the Time tab). The <b>Exam map</b> shows what's on each test and what you've covered. <b>Copy for AI</b> copies your log for Claude to summarize and quiz you.<br><br>
       <b>⏳ Time</b>: tap or drag across half-hour blocks and write what you did, then pick a color from green (productive) to red (dead time). <b>↻ Still on it</b> fills the empty half-hours since your last block in one tap.<br><br>
       <b>✅ To do</b>: one item always sits in the bar at the top of every tab until you do it, snooze it or let it go. The bar changes its color and spot so you keep noticing it (turn that off in Settings → Look).<br><br>
       <b>🌿 Care</b>: calories, water and other trackers on the left, and one Routines list on the right (every day, a few times a week, and on a schedule, with a calendar of what's due). Each day gets two colors, one for calories and one for routines: red to green the closer you get, and purple once you hit your calorie goal or finish every routine.<br><br>
@@ -1290,7 +1333,7 @@ function CAT_SEED(){
     C("🎮","Fun on purpose","life","#e3a92b","mental")
   ];
 }
-const DATA_V = 21;
+const DATA_V = 22;
 function defaults(){
   return {
     v:DATA_V, totalXp:0, maxLevel:1, best:0,
@@ -1495,6 +1538,50 @@ function migrate(p){
     s.routines = s.routines || [];
     if(!s.routines.some(r=>/^it study/i.test(r.name))) s.routines.push({id:uid(), name:"IT study", icon:"🖥️", area:"mental", every:1, times:1});
     s.v = 21;
+  }
+  if(s.v<22){
+    // v22: Skills becomes CompTIA A+ study: flashcards, a section per session, and the 1.1 study session from 2026-11-11
+    const L = s.learn = s.learn || {skills:[], log:[], summary:null};
+    L.skills = L.skills || []; L.log = L.log || [];
+    let it = L.skills.find(x=>/^\s*IT\s*$/i.test(x.name)) || L.skills[0];
+    if(!it){ it = {id:uid(), name:"IT", icon:""}; L.skills.push(it); }
+    if(!L.exam) L.exam = "1201";
+    const D = "2026-11-11";
+    if(!L.log.some(e=>e.id==="aplus-11")) L.log.push({id:"aplus-11", skill:it.id, date:D, sec:"1.1", exam:"1201", t:Date.parse(D+"T12:00:00"),
+      text:`Watched Professor Messer 220-1201, 1.1 Mobile device hardware.
+
+My notes: mobile devices have modular parts (designed to be removed and replaced) and parts that are built into the system. SSDs have no moving parts, so they're faster with less latency.
+
+Filled in afterwards: laptops use SO-DIMM RAM, and soldered RAM can't be upgraded or swapped if it fails. Storage goes in a 2.5" bay (HDD or a 2.5" SSD) or an M.2 slot (a small SSD stick). Battery, keyboard and wireless card can be swapped. Biometrics (fingerprint, face), NFC for tap to pay, privacy screens.
+
+Quiz, 3 rounds and 15 questions. Strong on: SSD as the cheap speed upgrade, soldered RAM, privacy screens, keyboard troubleshooting (USB keyboard test), what to check when a laptop won't charge. Mixed up: the M.2 slot vs HDDs, the memory effect (old NiCd batteries, not lithium-ion), NFC vs MFA, and where to check RAM (Task Manager > Performance > Memory, not Device Manager).`,
+      fuzzy:`M.2 = SSD stick vs 2.5" bay (HDD or SSD) · NFC (tap to pay) vs MFA (password + fingerprint) · memory effect = old NiCd`});
+    const rt = (s.routines||[]).find(r=>/^it study/i.test(r.name));
+    if(rt){ const a = (s.rdone = s.rdone || {})[rt.id] = (s.rdone[rt.id] || []); if(!a.includes(D)){ a.push(D); a.sort(); } }
+    if(!L.cards){
+      // [question, answer, how it went in the quiz: 1 = missed or half right (comes back first), 2 = right]
+      const C = [
+        ["Why is an SSD faster than an HDD?", "No moving parts. An HDD has spinning platters and a moving arm, so an SSD is faster with lower latency (responds quicker), and it's also quieter, uses less power and handles bumps better.", 2],
+        ["A user wants their old laptop to feel faster for cheap. What's the first upgrade to suggest, and why?", "Swap the HDD for an SSD. Most slowness on an old laptop is waiting for the drive; with an SSD it boots in seconds and apps open faster. One of the cheapest upgrades.", 2],
+        ["What's the downside of RAM that's soldered to the board?", "It can't be upgraded, and if it fails it can't be swapped: the whole board (or laptop) needs repair or replacing. Check before buying a laptop.", 2],
+        ["What kind of memory stick do laptops use?", "SO-DIMM: a smaller version of the desktop DIMM.", 1],
+        ["What does NFC stand for, and what is it used for?", "Near Field Communication. Only works within a few centimeters: tap to pay (Apple Pay, Google Wallet), door and building badges, tap-to-pair devices.", 1],
+        ["A laptop battery dies after an hour. It used to last five. Most likely cause and fix?", "Lithium-ion batteries wear out with age and charge cycles and hold less charge. Fix: replace the battery. Check its health with: powercfg /batteryreport", 1],
+        ["You open a laptop and see a small, flat, stick-shaped slot instead of a space for a regular drive. What goes there?", "An M.2 SSD (no moving parts). HDDs are the bigger 2.5\" (laptop) or 3.5\" (desktop) boxes. M.2 = stick = SSD.", 1],
+        ["Someone works in coffee shops and worries about people reading their screen. What hardware helps?", "A privacy screen: a filter over the display so anyone looking from an angle sees black.", 2],
+        ["A laptop keyboard has a few dead keys. What can you try before replacing the keyboard?", "Clean it with compressed air; reseat or replace the keycap; plug in a USB keyboard. If the keys work there, the laptop keyboard is the problem (hardware). If not, it's software (driver or keyboard language/layout).", 2],
+        ["\"My laptop can't connect to Wi-Fi, and the Wi-Fi option is missing from settings.\" Which replaceable part might be the problem?", "The wireless card: failed, loose, or missing its driver, so Windows can't see it. Check Device Manager > Network adapters. Before opening anything, check airplane mode and the Fn Wi-Fi key.", 1],
+        ["Why would a company want fingerprint login instead of only passwords?", "Fingerprints can't be shared, written down, guessed or phished, and logging in is faster. Fingerprint = something you are, password = something you know, phone or badge = something you have.", 2],
+        ["A laptop has a 2.5\" drive bay and an M.2 slot. Which holds only a no-moving-parts drive, and which can hold either kind?", "M.2 = SSD only. The 2.5\" bay holds an HDD or a 2.5\" SSD, which is why swapping an old HDD for a 2.5\" SSD is an easy upgrade.", 1],
+        ["\"Never charge your phone until it hits 0% or the battery remembers the lower amount.\" True for a modern phone?", "No. Lithium-ion has no memory effect (that was old NiCd batteries). Draining to 0% actually wears lithium out faster; about 20-80% is gentlest, which is why iPhones have Optimized Charging (holds at 80%).", 1],
+        ["Logging in needs a password AND a fingerprint. What's that called, and which two factor types are they?", "MFA: Multi-Factor Authentication. Password = something you know, fingerprint = something you are. (Not NFC, which is tap to pay.)", 1],
+        ["8 GB of RAM, slow with lots of tabs, and the RAM is soldered. How do you check, and what are the options?", "Check Task Manager > Performance > Memory (amount and \"Slots used\"), not Device Manager. Open slot: add a SO-DIMM. All soldered: fewer tabs, the browser's memory saver, cut startup programs, or eventually replace the laptop.", 1],
+        ["Tap to pay fails at a store, but everything else on the phone works. What do you check first?", "NFC: is it turned on (Android), and is the card set up in the wallet app (Apple Pay or Google Wallet)? Not Bluetooth.", 1],
+        ["A laptop won't charge. What do you check before assuming the battery is dead?", "The charger and cable (frayed or bent), the charging port, a different outlet, the charging light, that the charger is the right wattage, and powercfg /batteryreport for battery health.", 2]
+      ];
+      L.cards = C.map(([q, a, b], i)=>({id:"aplus-c"+i, q, a, sec:"1.1", exam:"1201", box:b, due:b>1 ? "2026-11-14" : D, t:Date.parse(D+"T12:00:00")+i}));
+    }
+    s.v = 22;
   }
   return s;
 }
@@ -2498,35 +2585,110 @@ const LR = () => S.learn || (S.learn = {skills:[], log:[], summary:null});
 const skOf = id => LR().skills.find(s=>s.id===id);
 const skName = s => `${s.icon ? s.icon + " " : ""}${s.name}`;
 const lrSessions = () => LR().log.filter(e=>skOf(e.skill)).sort((a,b)=>b.date.localeCompare(a.date) || b.t-a.t);
-// IT help-desk study plan, shown on the Skills page when there's a skill called IT
-const IT_DAYS = [
-  ["Sunday", "Review and practice questions", "Do practice questions on this week's topics, re-watch anything that felt shaky, then use <b>Copy for AI</b> to refresh your overview."],
-  ["Monday", "Hardware: the parts of a PC", "CPU, RAM, storage (HDD, SSD, NVMe), motherboard, power supply, ports and cables. <i>Hands-on:</i> open <b>System Information</b> (Start → type msinfo32) and <b>Task Manager → Performance</b>, and write down your own CPU, RAM and drive."],
-  ["Tuesday", "Networking basics", "IP addresses, DNS, DHCP, Wi-Fi, common ports. <i>Hands-on:</i> in Command Prompt run <code>ipconfig /all</code>, <code>ping google.com</code> and <code>nslookup google.com</code>, and work out what each line means."],
-  ["Wednesday", "Windows", "Settings vs Control Panel, user accounts, file permissions, updates, command-line basics. <i>Hands-on:</i> open <b>Device Manager</b>, <b>Disk Management</b> and <b>Event Viewer</b>; find one warning in Event Viewer and look up what it means."],
-  ["Thursday", "Troubleshooting", "CompTIA's 6 steps: identify the problem → guess the likely cause → test it → plan and fix → check it works → write it down. <i>Hands-on:</i> pick a real annoyance on your PC or phone and walk it through the 6 steps, written like a help-desk ticket."],
-  ["Friday", "Security", "Malware types, phishing, passwords and two-factor login, backups. <i>Hands-on:</i> go through <b>Windows Security</b>, and check your main accounts have two-factor login on."],
-  ["Saturday", "Mobile devices, printers, cloud and virtual machines", "Phone settings and syncing, printer problems, cloud storage, what a virtual machine is. <i>Hands-on:</i> explore your phone's settings like a technician would (storage, battery health, network reset). Later, try a free virtual machine."]
-];
+// CompTIA A+ study: the two exams, today's plan, and flip flashcards
+// S.learn also holds: exam ("1201" | "1202"), cards:[{id, q, a, sec, exam, box 1-5, due, t, seen}]
+const APLUS = {
+  "1201": {name:"Core 1", code:"220-1201", url:"https://www.professormesser.com/free-a-plus-training/220-1201/220-1201-video/220-1201-training-course/",
+    doms:[["1","Mobile devices",13],["2","Networking",23],["3","Hardware",25],["4","Virtualization and cloud",11],["5","Hardware and network troubleshooting",28]]},
+  "1202": {name:"Core 2", code:"220-1202", url:"https://www.youtube.com/results?search_query=professor+messer+220-1202",
+    doms:[["1","Operating systems",28],["2","Security",28],["3","Software troubleshooting",23],["4","Operational procedures",21]]}
+};
+const FC_INT = [0,1,3,7,14,30];   // days until a card comes back after "Got it", by its box (1-5)
+const lrExam = () => APLUS[LR().exam] ? LR().exam : "1201";
+const lrCards = () => LR().cards || (LR().cards = []);
+const secKey = s => { const m = String(s||"").trim().match(/^(\d+)\.(\d+)/); return m ? `${+m[1]}.${+m[2]}` : ""; };
+const secCmp = (a, b) => { const p = s => (s||"99.99").split(".").map(Number), x = p(a), y = p(b); return (x[0]-y[0]) || (x[1]-y[1]) || 0; };
+function itSkill(){ const L = LR(); let s = L.skills.find(x=>/^\s*IT\s*$/i.test(x.name)) || L.skills[0];
+  if(!s){ s = {id:uid(), name:"IT", icon:""}; L.skills.push(s); }
+  return s; }
+function lrLastSec(ex){ return lrSessions().filter(e=>(e.exam||"1201")===ex).map(e=>secKey(e.sec)).filter(Boolean).sort(secCmp).pop() || ""; }
+function lrWhen(d){ const n = daysBetween(today(), d); return n<=0 ? "today" : n===1 ? "tomorrow" : `in ${n} days`; }
 function itGuideHtml(){
-  const sk = LR().skills.find(s=>/^\s*IT\s*$/i.test(s.name)); if(!sk) return "";
-  const dow = new Date(today()+"T12:00").getDay(), d = IT_DAYS[dow];
-  const done = lrSessions().some(e=>e.skill===sk.id && e.date===today());
-  return `<div class="cardhead"><h3 class="lrh">🖥️ Today in IT: ${d[1]}</h3>${done ? `<small class="ok">✓ logged today</small>` : ""}</div>
-    <p class="itday">${d[2]}</p>
-    <details class="wkhow" id="itHow"${itOpen ? " open" : ""}><summary>The daily routine and the full week (tap to open)</summary>
-      <p><b>Every day, about 45 minutes</b> (log the time in the Time tab):</p>
-      <p><b>1. Review, 5 min</b>: reread yesterday's log entry. What was still confusing?<br>
-      <b>2. Learn, 20 min</b>: watch today's topic in Professor Messer's free CompTIA A+ videos (YouTube or professormesser.com, search the topic).<br>
-      <b>3. Do it, 15 min</b>: the hands-on part above, on your own PC or phone.<br>
-      <b>4. Log it, 5 min</b>: below, write what you did, one thing you learned, and one thing still fuzzy.</p>
-      <table class="wkt"><tr><th>Day</th><th>Topic</th></tr>${IT_DAYS.slice(1).concat([IT_DAYS[0]]).map(x=>`<tr${x===d ? ' class="on"' : ""}><td>${x[0].slice(0,3)}</td><td>${x[1]}</td></tr>`).join("")}</table>
-      <p><b>Where it leads:</b> the <b>CompTIA A+</b> certificate, the usual first step into help desk. It's two exams: <i>Core 1</i> (hardware, networking, mobile, troubleshooting) and <i>Core 2</i> (Windows, security, software, procedures). CompTIA's free <b>exam objectives</b> list is the checklist of everything on them. Studying daily, most people are ready in about 3–4 months.</p>
-      <p><b>Already done:</b> putting this app online with GitHub and Firebase counts as real hands-on experience. Keep it for your resume.</p>
-    </details>`;
+  const ex = lrExam(), X = APLUS[ex], last = lrLastSec(ex), t = today(), all = lrSessions();
+  const done = all.some(e=>e.date===t), fz = all.find(e=>e.fuzzy), due = fcDue().length;
+  return `<div class="cardhead"><h3 class="lrh">🖥️ Today's study</h3>${done ? `<small class="ok">✓ logged today</small>` : ""}</div>
+    <p class="itday">Next up in <b>${X.name} (${X.code})</b>: ${last ? `the video after <b>${last}</b>` : `start at <b>1.1</b>`}.${fz ? `<br><small class="sub">Still fuzzy last time: <i>${esc(fz.fuzzy)}</i></small>` : ""}</p>
+    <ol class="itsteps">
+      <li><b>Flashcards, 5 min</b>: ${due ? `clear the <b>${due}</b> due below` : "nothing due today, so skip ahead"}.</li>
+      <li><b>Watch, 20–30 min</b>: the next video or two. Pause and try things on your own PC.</li>
+      <li><b>Log it, 5 min</b>: the section number, what you learned, what's still fuzzy.</li>
+      <li><b>Make 2–3 cards</b> from it, or ask Claude to quiz you and turn the questions into cards.</li>
+    </ol>
+    <div class="row"><a class="btn sm primary" href="${X.url}" target="_blank" rel="noopener">▶ Open the ${X.name} videos</a></div>`;
 }
-let itOpen = false;
-document.addEventListener("toggle", e => { if(e.target.id==="itHow") itOpen = e.target.open; }, true);
+// ---- flashcards: "Got it" sends a card further out (1, 3, 7, 14, 30 days); "Missed it" brings it back this round and tomorrow
+let fcQ = null, fcFlip = false, fcPractice = false, fcEditing = null, fcRound = {got:0, miss:0};
+const fcOf = id => lrCards().find(c=>c.id===id);
+const fcDue = () => lrCards().filter(c=>(c.due||"")<=today());
+function fcStart(practice){
+  fcPractice = !!practice; fcFlip = false; fcRound = {got:0, miss:0};
+  const L = practice ? lrCards().slice().sort(()=>Math.random()-.5) : fcDue().sort((a,b)=>(a.box||1)-(b.box||1) || (a.t||0)-(b.t||0));
+  fcQ = L.map(c=>c.id);
+}
+function fcAnswer(got){
+  const c = fcOf(fcQ && fcQ[0]); if(!c) return;
+  fcQ.shift(); fcFlip = false; c.seen = (c.seen||0) + 1;
+  if(got){ fcRound.got++; if(!fcPractice){ const b = c.box||1; c.due = shiftDate(today(), FC_INT[b]); c.box = Math.min(5, b+1); } }
+  else { fcRound.miss++; c.miss = (c.miss||0) + 1; if(!fcPractice){ c.box = 1; c.due = shiftDate(today(), 1); } fcQ.push(c.id); }
+  save(); renderBrain();
+}
+function fcFill(c){
+  const f = $("fcForm").elements; fcEditing = c ? c.id : null;
+  f.q.value = c ? c.q : ""; f.a.value = c ? c.a : ""; f.sec.value = c ? (c.sec||"") : lrLastSec(lrExam());
+  $("fcCancel").hidden = !c; $("fcAddSum").textContent = c ? "✎ Edit card" : "+ Add a card";
+}
+function renderCards(){
+  const all = lrCards(), due = fcDue();
+  $("fcSum").textContent = all.length ? `${due.length} due · ${all.length} card${all.length>1?"s":""}` : "";
+  if(fcQ) fcQ = fcQ.filter(id=>fcOf(id));
+  if((!fcQ || !fcQ.length) && !fcPractice && due.length) fcStart(false);
+  const c = fcQ && fcQ.length ? fcOf(fcQ[0]) : null;
+  if(!c){
+    const nxt = all.map(x=>x.due||"").filter(Boolean).sort()[0];
+    const n = fcRound.got + fcRound.miss;
+    const tally = n ? `<p class="fcdone">Round done ✓ <b>${fcRound.got}</b> card${fcRound.got===1?"":"s"}${fcRound.miss ? `, with <b>${fcRound.miss}</b> miss${fcRound.miss>1?"es":""} along the way` : ", no misses"}.</p>` : "";
+    $("fcStudy").innerHTML = all.length
+      ? `${tally}<p class="sub" style="margin:4px 0 8px">All caught up.${nxt ? ` The next card comes back ${lrWhen(nxt)}.` : ""}</p><div class="row"><button class="btn sm" data-act="fcPracticeAll">Practice all ${all.length} anyway</button></div>`
+      : `<p class="sub">No cards yet. Add one below: a question on the front, the answer on the back.</p>`;
+    fcPractice = false; fcQ = null;
+  } else {
+    const tag = c.sec ? `<span class="fcsec">${esc(c.sec)}</span>` : "";
+    $("fcStudy").innerHTML = `<div class="fc${fcFlip ? " flip" : ""}" data-act="fcFlip" role="button" tabindex="0" aria-label="Flip the card">
+        <div class="fcin"><div class="fcf">${tag}<p>${esc(c.q)}</p><small>Tap the card to flip it</small></div>
+        <div class="fcb">${tag}<p>${esc(c.a)}</p><small>Answer</small></div></div></div>
+      <div class="row fcbtns">${fcFlip ? `<button class="btn" data-act="fcMiss">✗ Missed it</button><button class="btn primary" data-act="fcGot">✓ Got it</button>` : `<button class="btn primary" data-act="fcFlip">Show answer</button>`}</div>
+      <small class="sub">${fcQ.length} left in this round${fcPractice ? ` · practice round: doesn't change when cards come back · <button class="linkbtn" data-act="fcStop">stop</button>` : ""}</small>`;
+  }
+  const ff = $("fcForm").elements;
+  if(!fcEditing && !ff.sec.value && document.activeElement!==ff.sec) ff.sec.value = lrLastSec(lrExam());
+  $("fcListSum").textContent = `All cards (${all.length})`;
+  const dots = b => "●".repeat(b) + "○".repeat(5-b);
+  $("fcList").innerHTML = all.length ? all.slice().sort((a,b)=>secCmp(secKey(a.sec), secKey(b.sec)) || (a.t||0)-(b.t||0)).map(c=>`<div class="fcrow">
+      <div class="grow"><b>${esc(c.q)}</b><small>${esc(c.a)}</small></div>
+      <div class="fcmeta">${c.sec ? `<span class="lrtag">${esc(c.sec)}</span>` : ""}<span class="fcbox" title="Box ${c.box||1} of 5: more dots means you know it better">${dots(c.box||1)}</span>
+        <button class="x" data-act="fcEdit" data-id="${c.id}" title="Edit">✎</button><button class="x" data-act="fcDel" data-id="${c.id}" title="Delete">×</button></div></div>`).join("")
+    : `<div class="empty">No cards yet.</div>`;
+}
+$("fcForm").addEventListener("submit", e=>{
+  e.preventDefault(); const f = e.target.elements, q = f.q.value.trim(), a = f.a.value.trim(); if(!q || !a) return;
+  const sec = f.sec.value.trim().slice(0,12), c = fcEditing && fcOf(fcEditing);
+  if(c){ Object.assign(c, {q, a, sec}); toast("Card saved."); }
+  else { lrCards().push({id:uid(), q, a, sec, exam:lrExam(), box:1, due:today(), t:Date.now()}); if(fcQ && !fcPractice) fcQ.push(lrCards()[lrCards().length-1].id); toast("🃏 Card added. It's in today's round."); }
+  fcFill(null); save(); renderBrain();
+});
+document.addEventListener("keydown", e=>{ if(e.target.classList && e.target.classList.contains("fc") && (e.key===" " || e.key==="Enter")){ e.preventDefault(); fcFlip = !fcFlip; renderCards(); const n = document.querySelector("#fcStudy .fc"); if(n) n.focus(); } });
+function renderMap(){
+  const ex = lrExam(), all = lrSessions(), cards = lrCards();
+  $("lrMap").innerHTML = Object.entries(APLUS).map(([k, X])=>{
+    const got = [...new Set(all.filter(e=>(e.exam||"1201")===k).map(e=>secKey(e.sec)).filter(Boolean))];
+    return `<div class="exm${k===ex ? " on" : ""}"><div class="exhead"><b>${X.name} <span class="lrsub">${X.code}</span></b>${k===ex ? `<span class="lrtag">studying now</span>` : `<button class="linkbtn" data-act="lrExam" data-id="${k}">switch to this</button>`}</div>`
+      + X.doms.map(([n, nm, w])=>{
+        const ss = got.filter(s=>s.split(".")[0]===n).sort(secCmp), nc = cards.filter(c=>(c.exam||"1201")===k && secKey(c.sec).split(".")[0]===n).length;
+        return `<div class="exdom"><span class="exn">${n}.0</span><div class="grow"><div class="exrow"><span>${nm}</span><small>${w}% of the test</small></div>
+          <div class="bar"><i style="width:${Math.round(w/28*100)}%"></i></div>
+          <small class="sub">${ss.length ? `Covered: ${ss.join(", ")}` : "Not started"}${nc ? ` · ${nc} card${nc>1?"s":""}` : ""}</small></div></div>`; }).join("") + `</div>`; }).join("")
+    + `<small class="sub lrhow">The % is how much of each exam that area makes up. Core 1 is mostly troubleshooting, hardware and networking.</small>`;
+}
 // days in a row with at least one session, counting back from today (or yesterday, if today has none yet)
 function skStreak(){
   const ds = new Set(lrSessions().map(e=>e.date)); let d = today();
@@ -2550,42 +2712,30 @@ function lrMd(txt){
   return out.join("");
 }
 function renderBrain(){
-  const L = LR(), has = L.skills.length>0;
-  $("lrMain").hidden = !has; $("lrEmpty").hidden = has; $("lrStats").hidden = !has;
-  if(!has) return;
-  const all = lrSessions(), t = today(), ws = weekStart(t);
-  const days = new Set(all.map(e=>e.date)).size, wk = all.filter(e=>e.date>=ws && e.date<=t).length, stk = skStreak();
+  const L = LR(), sk = itSkill(), all = lrSessions(), t = today(), ex = lrExam(), X = APLUS[ex];
+  const days = new Set(all.map(e=>e.date)).size, stk = skStreak(), last = lrLastSec(ex);
+  $("lrTitle").innerHTML = `${X.name} <span class="lrsub">${X.code}</span>`;
   const stat = (v, l) => `<div><b>${v}</b><small>${l}</small></div>`;
-  $("lrStats").innerHTML = stat(all.length, "Sessions") + stat(days, "Days practised") + stat(stk ? `${stk} day${stk>1?"s":""}` : "—", "In a row")
-    + stat(wk || "—", "This week") + stat(all.length ? lrAgo(all[0].date) : "—", "Last session");
-  const gd = itGuideHtml(); $("lrGuide").hidden = !gd; $("lrGuide").innerHTML = gd;
+  $("lrStats").innerHTML = stat(last || "—", "Last section") + stat(fcDue().length, "Cards due") + stat(lrCards().length, "Cards")
+    + stat(stk ? `${stk} day${stk>1?"s":""}` : "—", "In a row") + stat(all.length, "Sessions");
+  $("lrGuide").innerHTML = itGuideHtml();
+  renderCards(); renderMap();
   // form
   const f = $("lrForm").elements; if(!f.date.value) f.date.value = t;
   const sel = $("lrSkillSel"), keep = sel.value;
   sel.innerHTML = L.skills.map(s=>`<option value="${s.id}">${esc(skName(s))}</option>`).join("");
-  sel.value = skOf(keep) ? keep : (L.last && skOf(L.last) ? L.last : L.skills[0].id);
+  sel.value = skOf(keep) ? keep : sk.id;
+  $("lrSkillWrap").hidden = L.skills.length<2;
   // log
-  if(lrFilt && !skOf(lrFilt)) lrFilt = "";
-  $("lrFilter").innerHTML = `<option value="">All skills</option>` + L.skills.map(s=>`<option value="${s.id}">${esc(skName(s))}</option>`).join("");
-  $("lrFilter").value = lrFilt;
-  const shown = all.filter(e=>!lrFilt || e.skill===lrFilt), cap = lrAll ? shown : shown.slice(0, 25);
+  const cap = lrAll ? all : all.slice(0, 25);
+  $("lrLogSum").textContent = all.length ? `${all.length} session${all.length>1?"s":""} · ${days} day${days>1?"s":""}` : "";
   $("lrLog").innerHTML = cap.length ? cap.map(e=>`<div class="lrent">
-      <div class="lrmeta"><span class="lrdate">${niceDate(e.date)}</span>
+      <div class="lrmeta"><span class="lrdate">${niceDate(e.date)}</span>${e.sec ? `<span class="lrtag">${esc(e.sec)}</span>` : ""}
         <span class="lracts"><button class="x" data-act="lrEdit" data-id="${e.id}" title="Edit">✎</button><button class="x" data-act="lrDel" data-id="${e.id}" title="Delete">×</button></span></div>
-      <span class="lrtag">${esc(skName(skOf(e.skill)))}</span>
-      <p>${esc(e.text)}</p></div>`).join("")
-      + (shown.length > cap.length ? `<button class="btn sm lrmore" data-act="lrMore">Show all ${shown.length} sessions</button>` : "")
-    : `<div class="empty">${all.length ? "No sessions for this skill yet." : "No sessions yet. Log your first one above."}</div>`;
-  // your skills, ranked by sessions
-  const rows = L.skills.map(s=>{ const es = all.filter(e=>e.skill===s.id);
-    return {s, n:es.length, wk:es.filter(e=>e.date>=ws).length, last:es[0] ? es[0].date : null}; })
-    .sort((x,y)=>y.n-x.n);
-  const top = Math.max(1, ...rows.map(x=>x.n));
-  $("lrAreaSum").textContent = `${L.skills.length} skill${L.skills.length>1?"s":""}`;
-  $("lrAreas").innerHTML = rows.map(x=>`<div class="lrarea ${lrFilt===x.s.id?"on":""}" data-act="lrFilt" data-id="${x.s.id}" title="Show only this skill's sessions">
-      <b>${esc(skName(x.s))} <button class="x" data-act="skEdit" data-id="${x.s.id}" title="Rename or delete">✎</button></b><span class="num">${x.n || "—"}</span>
-      <div class="bar"><i style="width:${x.n/top*100}%"></i></div>
-      <small>${x.n ? `${x.n} session${x.n>1?"s":""}${x.wk ? ` · ${x.wk} this week` : ""} · last ${lrAgo(x.last)}` : "No sessions yet"}</small></div>`).join("");
+      ${L.skills.length>1 ? `<span class="lrtag">${esc(skName(skOf(e.skill)))}</span>` : ""}
+      <p>${esc(e.text)}</p>${e.fuzzy ? `<p class="lrfz"><b>Still fuzzy:</b> ${esc(e.fuzzy)}</p>` : ""}</div>`).join("")
+      + (all.length > cap.length ? `<button class="btn sm lrmore" data-act="lrMore">Show all ${all.length} sessions</button>` : "")
+    : `<div class="empty">No sessions yet. Log your first one above.</div>`;
   // overview
   const sm = L.summary;
   if(sm && sm.text){
@@ -2600,22 +2750,23 @@ function renderBrain(){
 function lrPrompt(){
   const L = LR(), all = lrSessions().slice().reverse();
   const per = L.skills.map(s=>{ const es = all.filter(e=>e.skill===s.id); return `${s.name}: ${es.length} session${es.length===1?"":"s"}`; });
-  return `I keep a log of the skills I'm practising. Below is every session I've logged, oldest first. Please write a clear, formal overview I can save in my notes:
+  const weak = lrCards().filter(c=>(c.box||1)<=1).map(c=>`- ${c.q}`).join("\n");
+  return `I'm studying for the CompTIA A+ (currently ${APLUS[lrExam()].name}, ${APLUS[lrExam()].code}) with Professor Messer's free videos. Below is every study session I've logged, oldest first, with the section number and what was still fuzzy. Please write a clear, formal overview I can save in my notes:
 
 ## Summary
 A short paragraph on where I am overall.
 
 ## What I've learned
-One section per skill (${L.skills.map(s=>s.name).join(", ")}), listing the key concepts and abilities I've picked up.
+Grouped by exam area (for example 1.0 Mobile devices), listing the key concepts I've picked up.
 
-## Where my effort has gone
-Which skills I've practised most, and which I've barely touched.
+## Where I am in the exam
+Which sections I've covered, and which big areas are still ahead.
 
 ## Gaps to revisit
-Anything that sounds shaky or unfinished, based on what I wrote.
+Anything that sounds shaky or unfinished, based on what I wrote and my weakest flashcards.
 
 ## Suggested next steps
-3 to 5 concrete things to practise next.
+3 to 5 concrete things to practise next, then 5 new flashcard questions (with answers) aimed at my gaps.
 
 Use "## " headings and "- " bullet points. Only use what's in my log; don't invent things I didn't do.
 
@@ -2623,7 +2774,10 @@ Use "## " headings and "- " bullet points. Only use what's in my log; don't inve
 Skills: ${per.join(" · ")}
 Total: ${all.length} sessions
 
-` + all.map(e=>`[${e.date}] ${skOf(e.skill).name}
+Weakest flashcards:
+${weak || "- none yet"}
+
+` + all.map(e=>`[${e.date}]${e.sec ? ` ${e.sec}` : ""}${e.fuzzy ? ` (still fuzzy: ${e.fuzzy})` : ""}
 ${e.text}`).join("\n\n");
 }
 async function lrCopy(){
@@ -2636,7 +2790,7 @@ async function lrCopy(){
 }
 function lrFill(e){
   const f = $("lrForm").elements; lrEditing = e ? e.id : null;
-  f.date.value = e ? e.date : today(); f.text.value = e ? e.text : "";
+  f.date.value = e ? e.date : today(); f.text.value = e ? e.text : ""; f.sec.value = e ? (e.sec||"") : ""; f.fuzzy.value = e ? (e.fuzzy||"") : "";
   if(e) $("lrSkillSel").value = e.skill;
   $("lrFormTitle").textContent = e ? "Edit session" : "Log a session"; $("lrCancel").hidden = !e;
 }
@@ -2655,7 +2809,8 @@ $("skForm").addEventListener("submit", e=>{
 });
 $("lrForm").addEventListener("submit", e=>{
   e.preventDefault(); const f = e.target.elements, text = f.text.value.trim(), s = skOf(f.skill.value); if(!text || !s) return;
-  const v = {skill:s.id, date:f.date.value || today(), text:text.slice(0,5000)};
+  const v = {skill:s.id, date:f.date.value || today(), text:text.slice(0,5000), sec:f.sec.value.trim().slice(0,12), fuzzy:f.fuzzy.value.trim().slice(0,300)};
+  if(!lrEditing) v.exam = lrExam();
   const L = LR(), x = lrEditing && L.log.find(y=>y.id===lrEditing); L.last = s.id;
   if(x){ Object.assign(x, v); toast("Saved."); }
   else { L.log.push({id:uid(), t:Date.now(), ...v});
@@ -2665,14 +2820,13 @@ $("lrForm").addEventListener("submit", e=>{
     gain({xp:5}, `📘 Practised ${s.name}`); credit("mind", 5, v.date); toast(`📘 ${s.name} session saved.`); }
   lrFill(null); save(); renderAll();
 });
-$("lrFilter").addEventListener("change", e=>{ lrFilt = e.target.value; lrAll = false; renderBrain(); });
 // Dashboard panel: this week's practice
 function skDashHtml(){
   const L = LR(); if(!L.skills.length) return `<p class="sub" style="margin:0">Add a skill you're learning, like Networking or Cybersecurity, and log what you practise each day.</p>`;
   const t = today(), ws = weekStart(t), all = lrSessions(), wk = all.filter(e=>e.date>=ws && e.date<=t);
   const per = L.skills.map(s=>({s, n:wk.filter(e=>e.skill===s.id).length})).filter(x=>x.n).sort((a,b)=>b.n-a.n);
-  const last = all[0];
-  return `<div class="sksum"><b>${wk.length}</b> session${wk.length===1?"":"s"} this week${skStreak()>1 ? ` · ${skStreak()} days in a row` : ""}</div>`
+  const last = all[0], fd = fcDue().length;
+  return (fd ? `<p style="margin:0 0 6px">🃏 <b>${fd}</b> flashcard${fd>1?"s":""} due <button class="linkbtn" data-act="goto" data-tab="brain">study</button></p>` : "") + `<div class="sksum"><b>${wk.length}</b> session${wk.length===1?"":"s"} this week${skStreak()>1 ? ` · ${skStreak()} days in a row` : ""}</div>`
     + (per.length ? per.slice(0,4).map(x=>`<div class="mini"><span>${esc(x.s.icon||"📘")}</span><div class="grow">${esc(x.s.name)}</div><small>${x.n}</small></div>`).join("") : `<p class="sub" style="margin:4px 0">Nothing practised yet this week.</p>`)
     + (last ? `<p class="unote" style="margin-top:6px"><small>Last: ${esc(skOf(last.skill).name)}, ${lrAgo(last.date)}. </small>${esc(last.text.replace(/[*_#`>]+/g,"").replace(/\s+/g," ").trim().slice(0,140))}${last.text.length>140?"…":""}</p>` : "");
 }
@@ -3654,6 +3808,15 @@ document.addEventListener("click", e=>{
     case "lrMore": lrAll = true; renderBrain(); break;
     case "lrFilt": lrFilt = lrFilt===id ? "" : id; lrAll = false; renderBrain(); break;
     case "lrCopy": lrCopy(); break;
+    case "lrExam": LR().exam = id; fcQ = null; save(); renderBrain(); break;
+    case "fcFlip": fcFlip = !fcFlip; renderCards(); break;
+    case "fcGot": fcAnswer(true); break;
+    case "fcMiss": fcAnswer(false); break;
+    case "fcPracticeAll": fcStart(true); renderCards(); break;
+    case "fcStop": fcQ = null; fcPractice = false; fcRound = {got:0, miss:0}; renderCards(); break;
+    case "fcEdit": { const c = fcOf(id); if(c){ fcFill(c); $("fcAddBox").open = true; $("fcForm").scrollIntoView({behavior:"smooth", block:"center"}); } break; }
+    case "fcCancel": fcFill(null); break;
+    case "fcDel": { const c = fcOf(id); if(c && confirm("Delete this card?\n\n" + c.q)){ LR().cards = lrCards().filter(x=>x!==c); if(fcEditing===id) fcFill(null); save(); renderBrain(); } break; }
     case "lrPaste": { const L = LR(); $("lrPasteBox").hidden = false; $("lrPasteIn").value = L.summary ? L.summary.text : ""; $("lrPasteIn").focus(); break; }
     case "lrPasteCancel": $("lrPasteBox").hidden = true; break;
     case "lrSumSave": { const L = LR(), txt = $("lrPasteIn").value.trim();
