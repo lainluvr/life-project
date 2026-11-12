@@ -875,7 +875,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
         <option value="30x1">Monthly</option>
         <option value="90x1">Every 3 months</option>
       </select>
-      <button class="btn primary">Add</button>
+      <button class="btn primary" id="rSave">Add</button>
+      <button type="button" class="btn" data-act="rEditCancel" id="rCancel" hidden>Cancel</button>
     </form>
   </div>
   </div>
@@ -1333,7 +1334,7 @@ function CAT_SEED(){
     C("🎮","Fun on purpose","life","#e3a92b","mental")
   ];
 }
-const DATA_V = 26;
+const DATA_V = 27;
 function defaults(){
   return {
     v:DATA_V, totalXp:0, maxLevel:1, best:0,
@@ -1656,6 +1657,14 @@ Quiz, 8 questions, about 5 right. Strong on: airplane mode, 5G vs 4G, MDM, BYOD 
       ["What's the difference between MDM and MAM?", "MDM (Mobile Device Management) controls the whole device: passcode, settings, full wipe. MAM (Mobile Application Management) controls only the work apps and their data, so it can wipe just those. MAM suits BYOD.", 1]
     ].forEach(([q, a, b], i)=>{ const id = "aplus-13-"+i; if(!cards.some(c=>c.id===id)) cards.push({id, q, a, sec:"1.3", exam:"1201", box:b, due:b>1 ? "2026-11-15" : D, t:Date.parse(D+"T13:00:00")+i}); });
     s.v = 26;
+  }
+  if(s.v<27){
+    // v27: 10-minute tidy becomes daily; Morning workout and In-between come back every 3 days
+    const set = (re, sc) => (s.routines||[]).filter(r=>re.test(r.name)).forEach(r=>{ delete r.week; Object.assign(r, {times:1}, sc); });
+    set(/^10.?minute tidy$/i, {every:1});
+    set(/^morning workout$/i, {every:3});
+    set(/^in.?between$/i, {every:3});
+    s.v = 27;
   }
   return s;
 }
@@ -2185,7 +2194,7 @@ function rPast(id){
 }
 // Step-by-step guide shown inside the Morning workout routine
 const WORKOUT_HOW = `
-  <p><b>About 25 minutes, 3 mornings a week</b> (e.g. Mon / Wed / Fri). Drink a glass of water first.</p>
+  <p><b>About 25 minutes, every 3 days</b>, in the morning. The rest days in between are when the muscle grows. Drink a glass of water first.</p>
   <p><b>1. Warm up, 3 min</b><br>March in place 30 s · 10 arm circles each way · 10 leg swings per leg · 10 slow squats.</p>
   <p><b>2. The circuit</b>: do every set of one exercise, resting 60–90 s between sets, then move to the next.</p>
   <table class="wkt">
@@ -2219,7 +2228,7 @@ function routineHtml(r){
   return `<div class="rt ${st.k}">
     <div class="ic">${esc(r.icon)}</div>
     <div class="grow"><b>${esc(r.name)}</b> <span class="tag">${schedLabel(r)}</span><small class="when">${st.txt}</small>${dots}</div>
-    <div class="acts">${past}${undo}${doBtn}<button class="x" data-act="delRoutine" data-id="${r.id}" title="Remove">×</button></div>${how}
+    <div class="acts">${past}${undo}${doBtn}<button class="x" data-act="rEdit" data-id="${r.id}" title="Change name, emoji or how often">✎</button><button class="x" data-act="delRoutine" data-id="${r.id}" title="Remove">×</button></div>${how}
   </div>`;
 }
 const RANK_K = {over:0,due:1,ok:2};
@@ -3795,6 +3804,8 @@ document.addEventListener("click", e=>{
     case "cdYearNext": if(cdYear < +today().slice(0,4)){ cdYear++; renderCareYear(); } break;
     case "rUndo": rUndo(id); break;
     case "rPast": rPast(id); break;
+    case "rEdit": { const r = S.routines.find(x=>x.id===id); if(r){ rFill(r); $("routineForm").scrollIntoView({behavior:"smooth", block:"center"}); $("routineForm").elements.sched.focus(); } break; }
+    case "rEditCancel": rFill(null); break;
     case "delRoutine": { const r = S.routines.find(x=>x.id===id); if(r && confirm(`Remove "${r.name}"?`)){ S.routines = S.routines.filter(x=>x.id!==id); delete S.rdone[id]; save(); renderAll(); } break; }
     case "nPlus": nStep(id, 1); break;
     case "nMinus": nStep(id, -1); break;
@@ -3966,9 +3977,26 @@ $("importFile").addEventListener("change", e=>{
     S = migrate(p); save(); renderAll(); toast("Backup restored!");
   }).catch(()=>toast("That file doesn't look like a Life Login backup.")).finally(()=>{ e.target.value = ""; });
 });
+// editing a routine reuses the add form: name, emoji and how often (daily, a few times a week, or on a schedule)
+let rEditing = null;
+const schedVal = r => isWeekly(r) ? `w${r.week}` : `${r.every}x${r.times||1}`;
+function rFill(r){
+  const f = $("routineForm").elements; rEditing = r ? r.id : null;
+  if(r){
+    f.name.value = r.name; f.icon.value = r.icon || ""; const v = schedVal(r);
+    if(![...f.sched.options].some(o=>o.value===v)) f.sched.add(new Option(schedLabel(r), v));
+    f.sched.value = v;
+  } else $("routineForm").reset();
+  $("rSave").textContent = r ? "Save" : "Add"; $("rCancel").hidden = !r;
+}
 $("routineForm").addEventListener("submit", e=>{
   e.preventDefault(); const form = e.target, f = form.elements, name = f.name.value.trim(); if(!name) return;
-  S.routines.push({id:uid(), name, icon:f.icon.value.trim()||"✅", area:guessArea(name), times:1, ...parseSched(f.sched.value)}); form.reset(); save(); renderAll();
+  const r = rEditing && S.routines.find(x=>x.id===rEditing);
+  if(r){
+    delete r.week; Object.assign(r, {name, icon:f.icon.value.trim()||"✅", times:1}, parseSched(f.sched.value));
+    toast(`${r.icon} ${r.name} · ${schedLabel(r).toLowerCase()}`);
+  } else S.routines.push({id:uid(), name, icon:f.icon.value.trim()||"✅", area:guessArea(name), times:1, ...parseSched(f.sched.value)});
+  rFill(null); save(); renderAll();
 });
 $("nutriForm").addEventListener("submit", e=>{
   e.preventDefault(); const form = e.target, f = form.elements, name = f.name.value.trim(); if(!name) return;
