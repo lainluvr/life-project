@@ -340,15 +340,38 @@ body.nagfix{padding-bottom:190px}
 .seg button{flex:1;border:0;background:none;border-radius:9px;padding:8px 6px;cursor:pointer;color:var(--muted);font:inherit;font-weight:600;font-size:14px}
 .seg button.on{background:var(--panel);color:var(--text);box-shadow:var(--shadow)}
 .carebar{max-width:520px;margin:0 auto 14px}
+.bodyg{display:grid;grid-template-columns:minmax(0,1fr);gap:0 14px;align-items:start}
+@media (min-width:1000px){ .bodyg{grid-template-columns:minmax(0,3fr) minmax(0,2fr)} }
+.wkgrid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:center}
+.wkex b{display:block;font-size:14px} .wkex small{color:var(--muted);font-size:12px}
+.wksets{display:flex;gap:6px}
+.wksets input{width:58px;padding:8px 6px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:inherit;text-align:center;box-sizing:border-box}
+.wksets input::placeholder{color:var(--muted);opacity:.55}
+.wkdate{display:flex;align-items:center;gap:6px} .wkdate input{padding:7px 8px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:inherit}
+#wkCard .wkhow{margin-top:12px}
+#wkStatus .due{color:var(--accent)} #wkStatus .ok{color:var(--good);font-weight:600}
+.wkhrow{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);align-items:flex-start}
+.wkhrow .grow{flex:1;min-width:0} .wkhrow b{font-size:13.5px}
+.wkpart{display:inline-block;font-size:12.5px;color:var(--muted);margin:3px 12px 0 0} .wkpart b{color:var(--text);font-weight:600;font-size:12.5px}
+.wkpart .up{color:var(--good);font-style:normal;font-size:11px}
+#wkEvery{flex:0 0 auto;width:auto;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:inherit}
+.protnow b{font-size:30px;font-variant-numeric:tabular-nums}
+.protbar{height:8px;background:var(--panel2);border-radius:5px;overflow:hidden;margin:6px 0 12px} .protbar i{display:block;height:100%;background:var(--accent)}
+.protweek{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;height:70px;align-items:end}
+.protweek div{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:3px}
+.protweek i{display:block;width:70%;min-height:2px;border-radius:4px 4px 0 0;background:color-mix(in srgb,var(--accent) 55%,var(--panel2))} .protweek i.hit{background:var(--accent)}
+.protweek small{font-size:10.5px;color:var(--muted)}
+#protGoal{padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:inherit}
+#fcPasteIn,#fcPasteSec{display:block;width:100%;margin:4px 0 8px;padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);box-sizing:border-box;font:inherit}
+#fcPasteSec{display:inline-block;width:70px;margin:0 0 0 6px;padding:7px 8px}
 /* Focus modes */
 #tab-care[data-focus="nutrition"] .carer,
 #tab-care[data-focus="routines"] .carel{display:none}
 #tab-care:not([data-focus="all"]) .care{grid-template-columns:minmax(0,1fr)}
 @media (min-width:1000px){
-  #tab-care[data-focus="nutrition"] .carel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"cal food" "wt food";gap:0 14px;align-items:start}
+  #tab-care[data-focus="nutrition"] .carel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"cal food";gap:0 14px;align-items:start}
   #tab-care[data-focus="nutrition"] #calCard{grid-area:cal}
   #tab-care[data-focus="nutrition"] #foodCard{grid-area:food}
-  #tab-care[data-focus="nutrition"] #wtCard{grid-area:wt}
   #tab-care[data-focus="routines"] #routines{columns:2;column-gap:14px}
   #tab-care[data-focus="routines"] #routines .rt{break-inside:avoid}
 }
@@ -704,6 +727,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
   <button data-tab="time">⏳ Time</button>
   <button data-tab="putoff">✅ To do</button>
   <button data-tab="care">🌿 Care</button>
+  <button data-tab="body">💪 Body</button>
   <button data-tab="progress">📊 Stats</button>
   <button data-tab="settings">⚙️ Settings</button>
 </nav>
@@ -861,21 +885,6 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
     <div class="row"><button class="btn" data-act="calCopy">⧉ Copy yesterday's food to this day</button></div>
   </div>
 
-  <div class="card" id="wtCard">
-    <div class="cardhead"><h2>⚖️ Weight</h2><small id="wtToday"></small></div>
-    <form id="wtForm" class="wtform">
-      <label>🌅 Morning<span class="wtin"><input name="am" type="number" step="0.1" min="40" max="700" inputmode="decimal" placeholder="—" aria-label="Morning weight in pounds"><small>lb</small></span></label>
-      <label>🌙 Night<span class="wtin"><input name="pm" type="number" step="0.1" min="40" max="700" inputmode="decimal" placeholder="—" aria-label="Night weight in pounds"><small>lb</small></span></label>
-      <label>Day<input name="date" type="date" required></label>
-      <button class="btn primary">Save</button>
-    </form>
-    <div id="wtBody"></div>
-    <details class="calest">
-      <summary>How to weigh in</summary>
-      <p class="sub"><b>Morning</b> is your real number: right after waking up and using the bathroom, before eating or drinking. Same scale, same spot, similar clothes. <b>Night</b> is usually 1–4 lb higher from the day's food and water. That's normal, not fat. Judge progress by the <b>7-day average of your mornings</b>, never one day. For gaining, about 0.5–1 lb a week is a healthy pace; if it stays flat for 2–3 weeks, add about 200 kcal a day.</p>
-    </details>
-  </div>
-
   </div>
 
   <div class="carer">
@@ -947,6 +956,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
             <div class="lrrow"><label>Section<input name="sec" maxlength="12" placeholder="e.g. 1.2" autocomplete="off"></label></div>
             <div class="row"><button class="btn primary">Save card</button><button type="button" class="btn" data-act="fcCancel" id="fcCancel" hidden>Cancel edit</button></div>
           </form>
+        </details>
+        <details class="fcmore" id="fcPasteBox"><summary>📋 Paste cards</summary>
+          <p class="sub" style="margin:8px 0 4px">One card per line: <b>question | answer</b>. Paste the list Claude gives you after a quiz.</p>
+          <textarea id="fcPasteIn" rows="6" placeholder="What does NFC stand for? | Near Field Communication&#10;How far does Bluetooth reach? | About 10 meters (33 feet)"></textarea>
+          <div class="row" style="align-items:center"><label class="sub">Section <input id="fcPasteSec" maxlength="12" style="width:70px" placeholder="1.4"></label><button type="button" class="btn primary" data-act="fcPaste">Add cards</button></div>
         </details>
         <details class="fcmore" id="fcListBox"><summary id="fcListSum">All cards</summary><div id="fcList"></div></details>
       </div>
@@ -1071,6 +1085,55 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 
 
 <!-- PROGRESS -->
+<!-- BODY -->
+<section id="tab-body">
+ <div class="bodyg">
+  <div>
+  <div class="card" id="wkCard">
+    <div class="cardhead"><h2>💪 Workout</h2><small id="wkStatus"></small></div>
+    <p class="sub" style="margin:2px 0 8px">Type the reps you did in each set (seconds for the plank). The faint numbers are last time: try to match or beat them.</p>
+    <form id="wkForm">
+      <div id="wkRows"></div>
+      <div class="row" style="margin-top:10px;align-items:center">
+        <label class="sub wkdate">Day <input type="date" name="date" required></label>
+        <button class="btn primary">Save workout</button>
+      </div>
+    </form>
+    <details class="wkhow" id="wkGuide"><summary>What to do (tap to open)</summary><div id="wkGuideBody"></div></details>
+    <div class="sectlabel">History</div>
+    <div id="wkHist"></div>
+    <div class="row" style="margin-top:10px;align-items:center"><span class="sub">Workout every</span>
+      <select id="wkEvery" aria-label="How often to work out"><option value="2">2 days</option><option value="3">3 days</option><option value="4">4 days</option><option value="7">week</option></select></div>
+  </div>
+  </div>
+  <div>
+  <div class="card" id="protCard">
+    <div class="cardhead"><h2>🥚 Protein</h2><small id="protHead"></small></div>
+    <div id="protBody"></div>
+    <details class="calest">
+      <summary>Change the daily goal</summary>
+      <div class="row" style="margin-top:8px"><input type="number" id="protGoal" min="30" max="300" step="5" style="flex:0 1 110px" aria-label="Daily protein goal in grams"><span class="sub">g a day</span><button class="btn" data-act="protSave">Save</button></div>
+      <small class="sub">A common range for building muscle is about 0.7–1 g per pound of body weight. At 133 lb that's roughly 95–130 g.</small>
+    </details>
+  </div>
+  <div class="card" id="wtCard">
+    <div class="cardhead"><h2>⚖️ Weight</h2><small id="wtToday"></small></div>
+    <form id="wtForm" class="wtform">
+      <label>🌅 Morning<span class="wtin"><input name="am" type="number" step="0.1" min="40" max="700" inputmode="decimal" placeholder="—" aria-label="Morning weight in pounds"><small>lb</small></span></label>
+      <label>🌙 Night<span class="wtin"><input name="pm" type="number" step="0.1" min="40" max="700" inputmode="decimal" placeholder="—" aria-label="Night weight in pounds"><small>lb</small></span></label>
+      <label>Day<input name="date" type="date" required></label>
+      <button class="btn primary">Save</button>
+    </form>
+    <div id="wtBody"></div>
+    <details class="calest">
+      <summary>How to weigh in</summary>
+      <p class="sub"><b>Morning</b> is your real number: right after waking up and using the bathroom, before eating or drinking. Same scale, same spot, similar clothes. <b>Night</b> is usually 1–4 lb higher from the day's food and water. That's normal, not fat. Judge progress by the <b>7-day average of your mornings</b>, never one day. For gaining, about 0.5–1 lb a week is a healthy pace; if it stays flat for 2–3 weeks, add about 200 kcal a day.</p>
+    </details>
+  </div>
+  </div>
+ </div>
+</section>
+
 <section id="tab-progress">
   <div class="card">
     <div class="cardhead"><h2>📊 Stats</h2><div class="chips" id="stPeriod" style="margin:0"></div></div>
@@ -1376,7 +1439,7 @@ function CAT_SEED(){
     C("🎮","Fun on purpose","life","#e3a92b","mental")
   ];
 }
-const DATA_V = 28;
+const DATA_V = 29;
 function defaults(){
   return {
     v:DATA_V, totalXp:0, maxLevel:1, best:0,
@@ -1714,6 +1777,20 @@ Quiz, 8 questions, about 5 right. Strong on: airplane mode, 5G vs 4G, MDM, BYOD 
     s.routines = s.routines || [];
     if(!s.routines.some(r=>/^weigh.?in/i.test(r.name))) s.routines.push({id:uid(), name:"Weigh in", icon:"⚖️", area:"health", every:1, times:2});
     s.v = 28;
+  }
+  if(s.v<29){
+    // v29: a Body tab. The morning workout leaves the routines (its done days become workout entries); protein goal; usual breakfast with protein
+    const B = s.body = s.body || {every:3, protein:100, wk:[]}; B.wk = B.wk || [];
+    const rt = (s.routines||[]).find(r=>/^morning workout$/i.test(r.name));
+    if(rt){
+      if(rt.every>1 && !rt.week) B.every = rt.every;
+      for(const d of new Set((s.rdone||{})[rt.id] || [])) if(!B.wk.some(w=>w.date===d)) B.wk.push({id:uid(), date:d, sets:{}, t:Date.parse(d+"T08:00:00")});
+      s.routines = s.routines.filter(r=>r!==rt); if(s.rdone) delete s.rdone[rt.id];
+    }
+    s.myFoods = s.myFoods || [];
+    if(!s.myFoods.some(m=>/^usual breakfast$/i.test(m.name))) s.myFoods.push({id:uid(), name:"Usual breakfast", kcal:1100, p:55});
+    ((s.food||{})["2026-11-12"]||[]).forEach(e=>{ if(e.meal==="Breakfast" && /breakfast|bowl/i.test(e.text||"") && !e.p) e.p = 55; });
+    s.v = 29;
   }
   return s;
 }
@@ -2420,6 +2497,61 @@ $("wtForm").addEventListener("submit", e=>{
   wtFilledFor = null; save(); renderAll();
   toast(`⚖️ Saved${am!==null ? ` · 🌅 ${wtF(am)}` : ""}${pm!==null ? ` · 🌙 ${wtF(pm)}` : ""} lb`);
 });
+/* ---------- body: workout log with reps, protein goal (weight lives here too) ---------- */
+// S.body = {every:3, protein:100, wk:[{id, date, sets:{push:[12,12,10], ...}, t}]}
+const WK_EX = [["push","Push-ups",3,"8–15"],["squat","Squats",3,"12–20"],["row","Table rows",3,"8–12"],["bridge","Glute bridges",3,"12–15"],["lunge","Reverse lunges, per leg",2,"8"],["plank","Plank, seconds",3,"30"]];
+const BD = () => S.body || (S.body = {every:3, protein:100, wk:[]});
+const wkSorted = () => (BD().wk||[]).slice().sort((a,b)=>b.date.localeCompare(a.date) || (b.t||0)-(a.t||0));
+const wkTot = (w, k) => ((w.sets||{})[k]||[]).reduce((a,v)=>a+(+v||0),0);
+const shortDate = d => niceDate(d).replace(/, \d{4}$/,"");
+function wkBuild(){   // the input grid is built once, so typing is never wiped by a redraw
+  $("wkRows").innerHTML = `<div class="wkgrid">` + WK_EX.map(([k, nm, n, tg])=>`<div class="wkex"><b>${nm}</b><small>${n} × ${tg}</small></div>
+    <div class="wksets">${Array.from({length:n}, (_, i)=>`<input type="number" min="0" max="999" inputmode="numeric" name="${k}${i}" aria-label="${nm}, set ${i+1}">`).join("")}</div>`).join("") + `</div>`;
+  $("wkGuideBody").innerHTML = WORKOUT_HOW;
+  $("wkForm").elements.date.value = today();
+}
+function renderBody(){
+  const B = BD(), t = today(), all = wkSorted(), last = all[0], f = $("wkForm").elements;
+  if(!f.date.value) f.date.value = t;
+  // schedule
+  const next = last ? shiftDate(last.date, B.every||3) : t, doneToday = last && last.date===t;
+  $("wkStatus").innerHTML = doneToday ? `<span class="ok">✓ done today</span> · next ${shortDate(next)}`
+    : next<=t ? `<b class="due">Due today</b>${last ? ` · last ${lrAgo(last.date)}` : ""}` : `Next: ${shortDate(next)} (${lrWhen(next)})`;
+  $("wkEvery").value = String(B.every||3);
+  // last time's reps as placeholders
+  const prev = all.find(w=>w.date!==f.date.value && Object.keys(w.sets||{}).length);
+  WK_EX.forEach(([k, , n])=>{ for(let i=0;i<n;i++){ const v = prev && (prev.sets[k]||[])[i]; f[k+i].placeholder = v!=null ? v : "—"; } });
+  // history, with ▲ where a total beat the workout before it
+  const hist = all.slice(0, 8);
+  $("wkHist").innerHTML = hist.length ? hist.map((w, i)=>{ const before = all.slice(i+1).find(x=>Object.keys(x.sets||{}).length);
+    const parts = WK_EX.map(([k, nm])=>{ const s = (w.sets||{})[k]; if(!s || !s.length) return ""; const up = before && wkTot(w,k) > wkTot(before,k) && wkTot(before,k)>0;
+      return `<span class="wkpart">${nm.split(",")[0]} <b>${s.join("·")}</b>${up ? ` <i class="up">▲</i>` : ""}</span>`; }).filter(Boolean).join("");
+    return `<div class="wkhrow"><div class="grow"><b>${w.date===t ? "Today" : shortDate(w.date)}</b><div>${parts || `<small class="sub">done (no reps logged)</small>`}</div></div><button class="x" data-act="wkDel" data-id="${w.id}" title="Delete">×</button></div>`; }).join("")
+    : `<div class="empty">No workouts logged yet.</div>`;
+  // protein
+  const goal = B.protein||100, p = dayProtein(t), pct = Math.min(1, p/goal);
+  $("protHead").textContent = `goal ${goal} g`;
+  if(document.activeElement!==$("protGoal")) $("protGoal").value = goal;
+  const days = dRange(shiftDate(t,-6), t);
+  $("protBody").innerHTML = `<div class="protnow"><b>${p}</b> <span class="sub">of ${goal} g today</span></div>
+    <div class="bar protbar"><i style="width:${Math.round(pct*100)}%"></i></div>
+    <div class="protweek">${days.map(d=>{ const v = dayProtein(d); return `<div title="${niceDate(d)}: ${v} g"><i style="height:${Math.round(Math.min(1, v/goal)*100)}%" class="${v>=goal ? "hit" : ""}"></i><small>${d===t ? "Today" : new Date(d+"T12:00").toLocaleDateString(undefined,{weekday:"short"})}</small></div>`; }).join("")}</div>
+    <p class="sub" style="margin:8px 0 4px">${p>=goal ? "✓ Goal hit today." : `${goal-p} g to go. Easy adds: a glass of milk (~8 g), Greek yogurt (~15–20 g), 2 more eggs (~12 g), a chicken breast (~35 g), a protein shake (~25 g).`}</p>
+    <small class="sub">Protein comes from the <b>protein g</b> box when you log food in Care. Your usual breakfast is about 55 g, and it's saved in My foods with that filled in.</small>`;
+}
+$("wkForm").addEventListener("submit", e=>{
+  e.preventDefault(); const f = e.target.elements, d = f.date.value || today(), sets = {};
+  WK_EX.forEach(([k, , n])=>{ const a = []; for(let i=0;i<n;i++){ const v = parseInt(f[k+i].value, 10); if(v>=0) a.push(v); } if(a.length) sets[k] = a; });
+  if(!Object.keys(sets).length && !confirm("No reps typed in. Save it as done anyway?")) return;
+  const B = BD(); B.wk = B.wk || [];
+  const same = B.wk.find(w=>w.date===d);
+  if(same) Object.assign(same, {sets, t:Date.now()}); else B.wk.push({id:uid(), date:d, sets, t:Date.now()});
+  WK_EX.forEach(([k, , n])=>{ for(let i=0;i<n;i++) f[k+i].value = ""; });
+  addLog(`Workout ${niceDate(d)}`); save(); renderAll();
+  toast(`💪 Workout saved. Next one: ${shortDate(shiftDate(wkSorted()[0].date, B.every||3))}.`);
+});
+$("wkEvery").addEventListener("change", e=>{ BD().every = +e.target.value || 3; save(); renderAll(); });
+wkBuild();
 function renderNutri(){
   const t = today();
   const hit = S.nutri.filter(n=>nCount(n,t)>=n.target).length;
@@ -2835,6 +2967,20 @@ function fcAnswer(got){
   if(got){ fcRound.got++; if(!fcPractice){ const b = c.box||1; c.due = shiftDate(today(), FC_INT[b]); c.box = Math.min(5, b+1); } }
   else { fcRound.miss++; c.miss = (c.miss||0) + 1; if(!fcPractice){ c.box = 1; c.due = shiftDate(today(), 1); } fcQ.push(c.id); }
   save(); renderBrain();
+}
+function fcPasteIn(){
+  const txt = $("fcPasteIn").value, sec = $("fcPasteSec").value.trim().slice(0,12) || lrLastSec(lrExam()), cards = lrCards();
+  let n = 0, skip = 0;
+  txt.split(/\r?\n/).forEach((line, i)=>{
+    const l = line.replace(/^\s*(?:[-*•]|\d+[.)])\s+/, "").trim(); if(!l) return;
+    const k = l.indexOf("|"); if(k<0){ skip++; return; }
+    const q = l.slice(0, k).trim().slice(0,600), a = l.slice(k+1).trim().replace(/^\|\s*/, "").slice(0,1500); if(!q || !a){ skip++; return; }
+    if(cards.some(c=>c.q===q)){ skip++; return; }
+    cards.push({id:uid(), q, a, sec, exam:lrExam(), box:1, due:today(), t:Date.now()+i}); n++;
+  });
+  if(!n){ toast(skip ? "No new cards found. Each line needs a | between the question and the answer." : "Paste some cards first."); return; }
+  $("fcPasteIn").value = ""; $("fcPasteBox").open = false; fcQ = null; save(); renderBrain();
+  toast(`🃏 Added ${n} card${n>1?"s":""}${sec ? ` to ${sec}` : ""}${skip ? ` (${skip} line${skip>1?"s":""} skipped)` : ""}. They're in today's round.`, true);
 }
 function fcFill(c){
   const f = $("fcForm").elements; fcEditing = c ? c.id : null;
@@ -3868,7 +4014,7 @@ function applyTheme(){
 }
 function renderAll(){
   TT = timeTotals();
-  renderHeader(); renderRoutines(); renderNutri(); renderWeight(); calTgtLabel(); renderCareTop();
+  renderHeader(); renderRoutines(); renderNutri(); renderWeight(); renderBody(); calTgtLabel(); renderCareTop();
   renderBrain(); renderTime(); renderPut(); renderProgress(); renderReview(); renderLog();
   applyTheme(); renderDash(); renderAlarm(); renderSetTabs();
   hyperTick();
@@ -4008,6 +4154,9 @@ document.addEventListener("click", e=>{
       save(); renderAll(); toast(`📏 ${m.name}: ${v} ${m.unit} saved`); break;
     }
     case "wtDel": { const L = WT().log; if(L[id] && confirm(`Delete the weigh-ins for ${niceDate(id)}?`)){ delete L[id]; wtFilledFor = null; save(); renderAll(); } break; }
+    case "wkDel": { const B = BD(), w = (B.wk||[]).find(x=>x.id===id); if(w && confirm(`Delete the workout from ${niceDate(w.date)}?`)){ B.wk = B.wk.filter(x=>x!==w); save(); renderAll(); } break; }
+    case "protSave": { const v = Math.round(+$("protGoal").value); if(!(v>=30 && v<=300)){ toast("Pick a goal between 30 and 300 g."); break; } BD().protein = v; save(); renderAll(); toast(`🥚 Protein goal: ${v} g a day`); break; }
+    case "fcPaste": fcPasteIn(); break;
     case "delMetric": { const m = S.metrics.find(x=>x.id===id); if(m && confirm(`Remove "${m.name}" and all its entries?`)){ S.metrics = S.metrics.filter(x=>x.id!==id); delete S.mlog[id]; save(); renderAll(); } break; }
     case "skNew": skOpen(null); break;
     case "skEdit": { const s = skOf(id); if(s) skOpen(s); break; }
