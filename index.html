@@ -1211,6 +1211,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
       <label class="chk">until <select id="alarmTo" aria-label="Last reminder"></select></label>
       <label class="chk"><input type="checkbox" id="alarmSound"> play a sound</label>
       <label class="chk"><input type="checkbox" id="alarmSkip"> skip it if that half-hour is already filled in</label>
+      <label class="chk"><input type="checkbox" id="alarmStudy"> 📚 Study mode: 5 flashcards first, then fill in your time</label>
       <button class="btn" data-act="alarmTest">🔔 Test it</button>
     </div>
     <small id="alarmStatus"></small>
@@ -1311,6 +1312,15 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
       <button type="button" class="btn" data-act="blkCancel">Cancel</button>
     </div>
   </form>
+</dialog>
+
+
+
+<!-- study break: 5 flashcards before filling in the half-hour -->
+<dialog id="sbDlg">
+  <small id="sbWhen"></small>
+  <h2 style="margin:4px 0 8px">📚 Study break</h2>
+  <div id="sbBody"></div>
 </dialog>
 
 
@@ -2844,7 +2854,7 @@ function renderPut(){
 function putFind(id){ return S.hurdles.find(h=>h.id===id); }
 
 /* ---------- half-hour reminder ---------- */
-const ALARM_D = {on:false, from:8, to:23, sound:true, skip:true};
+const ALARM_D = {on:false, from:8, to:23, sound:true, skip:true, study:false};
 const alarmCfg = () => ({...ALARM_D, ...(S.alarm||{})});
 const alarmKeyNow = () => { const n = new Date(); return today() + " " + n.getHours() + (n.getMinutes()<30 ? ":00" : ":30"); };
 let alarmLast = alarmKeyNow(), actx = null, titleT = null;
@@ -2878,6 +2888,55 @@ function alarmFire(){
       n.onclick = () => { window.focus(); showTab("time"); n.close(); }; }catch(e){}
   }
   if(document.hidden){ clearInterval(titleT); let k = 0; titleT = setInterval(()=>{ document.title = k++%2 ? titleBase : "⏰ Fill in your time"; }, 1000); }
+  if(c.study) studyBreak();
+}
+// ---- study mode: 5 flashcards (due ones first), then the "What did you do?" box for the last half-hour
+let sb = null;
+function sbPick(){
+  const t = today(), all = lrCards(), byBox = (a,b)=>(a.box||1)-(b.box||1), mix = a => a.sort(()=>Math.random()-.5);
+  return [...mix(all.filter(c=>(c.due||"")<=t)).sort(byBox), ...mix(all.filter(c=>(c.due||"")>t)).sort(byBox)].slice(0,5).map(c=>c.id);
+}
+function sbLast(){ const cb = curBlock(); return cb>0 ? {d:today(), i:cb-1} : {d:shiftDate(today(),-1), i:47}; }
+function studyBreak(){
+  if(document.querySelector("dialog[open]")) return;      // never on top of another box
+  const q = sbPick(), L = sbLast();
+  if(!q.length){ showTab("time"); openBlk(L.d, L.i, L.i, false); return; }
+  sb = {q, i:0, got:0, miss:0, flip:false, L};
+  renderSb(); $("sbDlg").showModal();
+}
+function renderSb(){
+  if(!sb) return;
+  const c = fcOf(sb.q[sb.i]);
+  if(!c){
+    $("sbWhen").textContent = "";
+    $("sbBody").innerHTML = `<p class="fcdone">Done ✓ <b>${sb.got}</b> of ${sb.q.length} right.${sb.miss ? " The ones you missed come back tomorrow." : ""}</p>
+      <div class="row"><button class="btn primary" data-act="sbNext">Fill in your time →</button></div>`;
+    setTimeout(()=>{ const b = document.querySelector("#sbBody .btn.primary"); if(b) b.focus(); }, 30);
+    return;
+  }
+  const tag = c.sec ? `<span class="fcsec">${esc(c.sec)}</span>` : "";
+  $("sbWhen").textContent = `Card ${sb.i+1} of ${sb.q.length} · then fill in your time`;
+  $("sbBody").innerHTML = `<div class="fc${sb.flip ? " flip" : ""}" data-act="sbFlip" role="button" aria-label="Flip the card">
+      <div class="fcin"><div class="fcf">${tag}<p>${esc(c.q)}</p><small>Tap the card to flip it</small></div>
+      <div class="fcb">${tag}<p>${esc(c.a)}</p><small>Answer</small></div></div></div>
+    <div class="row fcbtns">${sb.flip ? `<button class="btn" data-act="sbMiss">✗ Missed it</button><button class="btn primary" data-act="sbGot">✓ Got it</button>` : `<button class="btn primary" data-act="sbFlip">Show answer</button>`}</div>
+    <small class="sub"><button class="linkbtn" data-act="sbNext">Skip the cards</button></small>`;
+  setTimeout(()=>{ const b = document.querySelector("#sbBody .fcbtns .btn.primary"); if(b) b.focus(); }, 30);
+}
+// a due card moves along as usual; a card that isn't due yet only changes if you miss it
+function sbAnswer(got){
+  const c = fcOf(sb.q[sb.i]);
+  if(c){
+    c.seen = (c.seen||0) + 1;
+    if(got){ sb.got++; if((c.due||"")<=today()){ const b = c.box||1; c.due = shiftDate(today(), FC_INT[b]); c.box = Math.min(5, b+1); } }
+    else { sb.miss++; c.miss = (c.miss||0) + 1; c.box = 1; c.due = shiftDate(today(), 1); }
+    save(); renderBrain();
+  }
+  sb.i++; sb.flip = false; renderSb();
+}
+function sbNext(){
+  const L = sb && sb.L; $("sbDlg").close(); sb = null;
+  if(L){ showTab("time"); openBlk(L.d, L.i, L.i, false); }
 }
 document.addEventListener("visibilitychange", ()=>{ if(!document.hidden && titleT){ clearInterval(titleT); titleT = null; document.title = titleBase; } });
 function alarmTick(){
@@ -3257,7 +3316,7 @@ function renderAlarm(){
   const c = alarmCfg(), f = $("alarmFrom"), u = $("alarmTo");
   if(!f.options.length){ const o = [...Array(24).keys()].map(i=>`<option value="${i}">${hourLabel(i)}</option>`).join(""); f.innerHTML = o; u.innerHTML = o; }
   if(document.activeElement!==f) f.value = c.from; if(document.activeElement!==u) u.value = c.to;
-  $("alarmSound").checked = !!c.sound; $("alarmSkip").checked = !!c.skip;
+  $("alarmSound").checked = !!c.sound; $("alarmSkip").checked = !!c.skip; $("alarmStudy").checked = !!c.study;
   const hs = $("hyperSel"); if(document.activeElement!==hs) hs.value = String(hyperH());
   $("alarmBtn").textContent = c.on ? "Turn off" : "Turn on";
   $("alarmBtn").className = c.on ? "btn" : "btn primary";
@@ -3266,7 +3325,7 @@ function renderAlarm(){
     : Notification.permission==="denied" ? "Pop-up notifications are blocked for this page, so it uses the sound and a message in the app. You can allow them in the browser's site settings."
     : "Turning it on asks the browser for permission to show pop-up notifications.";
   $("alarmStatus").className = c.on ? "ok" : "";
-  $("alarmStatus").textContent = (c.on ? `✓ On: rings at :00 and :30 from ${hourLabel(c.from)} until ${hourLabel(c.to)}${c.skip ? ", unless you already filled in that half-hour" : ""}. ` : "Off. ") + np;
+  $("alarmStatus").textContent = (c.on ? `✓ On: rings at :00 and :30 from ${hourLabel(c.from)} until ${hourLabel(c.to)}${c.skip ? ", unless you already filled in that half-hour" : ""}.${c.study ? " Study mode: 5 flashcards come up first." : ""} ` : "Off. ") + np;
   $("tAlarm").textContent = c.on ? "⏰ Reminder every 30 min is on" : "⏰ Want a reminder every 30 min?";
 }
 let putEditing = null;
@@ -4074,6 +4133,10 @@ document.addEventListener("click", e=>{
       } else toast("⏰ Reminder off.");
       save(); renderAlarm(); break; }
     case "alarmTest": alarmFire(); break;
+    case "sbFlip": if(sb){ sb.flip = !sb.flip; renderSb(); } break;
+    case "sbGot": if(sb) sbAnswer(true); break;
+    case "sbMiss": if(sb) sbAnswer(false); break;
+    case "sbNext": sbNext(); break;
     case "nudgeTest": nudgeSound(); break;
     case "setGo": S.setTab = b.dataset.g; save(); renderSetTabs(); showTab("settings"); window.scrollTo(0,0); break;
     case "setTab": S.setTab = SET_G[b.dataset.g] ? b.dataset.g : "look"; save(); renderSetTabs(); break;
@@ -4251,6 +4314,7 @@ $("blkForm").addEventListener("submit", e=>{ e.preventDefault(); saveBlk($("blkT
 // Enter makes a new line in the summary; Ctrl+Enter (or Cmd+Enter) saves
 $("blkText").addEventListener("keydown", e=>{ if(e.key==="Enter" && (e.ctrlKey || e.metaKey)){ e.preventDefault(); saveBlk($("blkText").value, dlgRate); } });
 $("blkDlg").addEventListener("close", ()=>{ dlgSel = null; });
+$("sbDlg").addEventListener("close", ()=>{ sb = null; });
 $("rcMonBox").addEventListener("toggle", renderRCal);
 
 /* ---------- forms & inputs ---------- */
@@ -4315,8 +4379,8 @@ document.addEventListener("change", e=>{
   const id = e.target.id;
   if(id==="hyperSel"){ S.hyper = +e.target.value; save(); toast(S.hyper ? `🌊 Hyperfocus check after ${fmtH(S.hyper)} on the same thing.` : "🌊 Hyperfocus check off."); hyperTick(); return; }
   if(id==="nagMix"){ S.nagMix = e.target.checked; save(); nagRoll(); return; }
-  if(id==="alarmFrom" || id==="alarmTo" || id==="alarmSound" || id==="alarmSkip"){
-    S.alarm = {...alarmCfg(), from:+$("alarmFrom").value, to:+$("alarmTo").value, sound:$("alarmSound").checked, skip:$("alarmSkip").checked}; save(); renderAlarm(); return; }
+  if(id==="alarmFrom" || id==="alarmTo" || id==="alarmSound" || id==="alarmSkip" || id==="alarmStudy"){
+    S.alarm = {...alarmCfg(), from:+$("alarmFrom").value, to:+$("alarmTo").value, sound:$("alarmSound").checked, skip:$("alarmSkip").checked, study:$("alarmStudy").checked}; save(); renderAlarm(); return; }
   const sel = e.target.closest("select[data-snooze]"); if(!sel || !sel.value) return;
   const h = putFind(sel.dataset.snooze); if(!h) return;
   const n = +sel.value; h.snooze = shiftDate(today(), n); if(nagPick===h.id) nagPick = null;
