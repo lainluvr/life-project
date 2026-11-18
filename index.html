@@ -1215,15 +1215,6 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
       <button class="btn" data-act="alarmTest">🔔 Test it</button>
     </div>
     <small id="alarmStatus"></small>
-    <div class="sectlabel">🌊 Hyperfocus check</div>
-    <div class="row" style="align-items:center;margin-top:0">
-      <label class="chk" style="white-space:normal">When the same thing fills
-        <select id="hyperSel" aria-label="Hyperfocus check">
-          <option value="0">never (off)</option><option value="1">1 hour</option><option value="1.5">1.5 hours</option>
-          <option value="2">2 hours</option><option value="3">3 hours</option>
-        </select> in a row on the Time tab, nudge me to check on water, food and moving.</label>
-    </div>
-    <small class="sub">Works from your time blocks, so it pairs well with the reminder and ↻ Still on it. Sleep doesn't count. The nudge has its own sound: one soft low "bloop", while the half-hour reminder rings "ding-ding" three times. <button class="linkbtn" data-act="nudgeTest">🔈 Hear the nudge</button></small>
   </div>
   <div class="card" data-sg="save" id="syncCard">
     <h2>🔒 Sync between devices</h2>
@@ -1263,7 +1254,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
       <b>✅ To do</b>: one item always sits in the bar at the top of every tab until you do it, snooze it or let it go. The bar changes its color and spot so you keep noticing it (turn that off in Settings → Look).<br><br>
       <b>🌿 Care</b>: calories, water and other trackers on the left, and one Routines list on the right (every day, a few times a week, and on a schedule, with a calendar of what's due). Each day gets two colors, one for calories and one for routines: red to green the closer you get, and purple once you hit your calorie goal or finish every routine.<br><br>
       <b>📊 Stats</b>: pick Week, Month, Year or All time to see green and dead time, calorie days, to-dos, skill practice and active days, each compared with the stretch before. The weekly review and the activity log live here too.<br><br>
-      <b>⏰ Reminder and 🌊 hyperfocus check</b> (Settings → Reminder): a ding-ding at every :00 and :30 to fill in the Time tab, and a softer nudge to drink, eat or move when one thing fills 2 hours in a row.<br><br>
+      <b>⏰ Reminder</b> (Settings → Reminder): a ding-ding at every :00 and :30 to fill in the Time tab. Turn on Study mode to get 5 flashcards first.<br><br>
       <b>😀 Emoji boxes</b>: click any emoji box for a drop-down with search and your recent picks.<br><br>
       <b>🔥 Streak</b>: any day you log something keeps it going. Today never breaks it before the day is over. Today is highlighted in amber on every calendar.
     </p>
@@ -2876,8 +2867,6 @@ function tone(notes){
 }
 // Half-hour reminder: the two-note "ding-ding", three times in a row
 function beep(){ tone([0, .75, 1.5].flatMap(s=>[[660, s, .4], [880, s+.22, .4]])); }
-// Hyperfocus nudge: one soft, low "bloop" that slides down, so it never sounds like the reminder
-function nudgeSound(){ tone([[740, 0, 1.3, "triangle", .3, 370], [1480, 0, .5, "sine", .06, 740]]); }
 function alarmFire(){
   const c = alarmCfg(), lbl = new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
   const msg = `It's ${lbl}. What did the last half-hour go to?`;
@@ -2955,28 +2944,6 @@ function renderSetTabs(){
   const g = SET_G[S.setTab] ? S.setTab : "look";
   $("tab-settings").dataset.sg = g;
   $("setTabs").innerHTML = Object.entries(SET_G).map(([k,v])=>`<button class="chip ${g===k?"on":""}" data-act="setTab" data-g="${k}">${v}</button>`).join("");
-}
-// Same activity for a long stretch: a friendly nudge to look after yourself
-const hyperH = () => S.hyper===undefined ? 2 : +S.hyper;
-const hyperDone = new Set();
-const HYPER_TIP = ["💧 Drink some water", "🍎 Have you eaten?", "🧍 Stand up and stretch for a minute", "👀 Look at something far away for 20 seconds", "🚻 Bathroom break?", "🌬️ Three slow breaths"];
-function hyperRun(){
-  const t = today(), arr = S.tlog[t]||[], cb = curBlock();
-  let e = arr[cb] ? cb : cb-1; if(e<0 || !arr[e]) return null;
-  const b = arr[e], same = x => x && x.r===b.r && normS(x.s)===normS(b.s);
-  if(SLEEP_RE.test(b.s||"")) return null;
-  let s = e; while(s>0 && same(arr[s-1])) s--;
-  return {s, e, b, h:(e-s+1)/2};
-}
-function hyperTick(){
-  const th = hyperH(); if(!th) return;
-  const r = hyperRun(); if(!r || r.h < th) return;
-  const key = `${today()}|${r.s}|${Math.floor(r.h/th)}`; if(hyperDone.has(key)) return;
-  hyperDone.add(key);
-  const what = r.b.s || RATE[r.b.r].nm, tip = HYPER_TIP[Math.floor(Math.random()*HYPER_TIP.length)];
-  const msg = `🌊 ${fmtH(r.h)} on "${what}". Nice focus. Quick check: ${tip}${/[?!]$/.test(tip) ? "" : "."}`;
-  if(alarmCfg().sound) nudgeSound();
-  toast(msg, true);   // on-screen pop-up only: no Windows notification, no activity-log entry
 }
 /* ---------- skills: dated practice sessions per skill, effort per skill, one AI summary ---------- */
 // S.learn = {skills:[{id, name, icon}], log:[{id, skill, date, text, t}], summary:{text, t, n}|null}
@@ -3317,7 +3284,6 @@ function renderAlarm(){
   if(!f.options.length){ const o = [...Array(24).keys()].map(i=>`<option value="${i}">${hourLabel(i)}</option>`).join(""); f.innerHTML = o; u.innerHTML = o; }
   if(document.activeElement!==f) f.value = c.from; if(document.activeElement!==u) u.value = c.to;
   $("alarmSound").checked = !!c.sound; $("alarmSkip").checked = !!c.skip; $("alarmStudy").checked = !!c.study;
-  const hs = $("hyperSel"); if(document.activeElement!==hs) hs.value = String(hyperH());
   $("alarmBtn").textContent = c.on ? "Turn off" : "Turn on";
   $("alarmBtn").className = c.on ? "btn" : "btn primary";
   const np = !("Notification" in window) ? "Pop-up notifications aren't available here, so it uses the sound and a message in the app."
@@ -4082,7 +4048,6 @@ function renderAll(){
   renderHeader(); renderRoutines(); renderNutri(); renderWeight(); renderBody(); calTgtLabel(); renderCareTop();
   renderBrain(); renderTime(); renderPut(); renderProgress(); renderReview(); renderLog();
   applyTheme(); renderDash(); renderAlarm(); renderSetTabs();
-  hyperTick();
 }
 
 /* ---------- tabs ---------- */
@@ -4137,7 +4102,6 @@ document.addEventListener("click", e=>{
     case "sbGot": if(sb) sbAnswer(true); break;
     case "sbMiss": if(sb) sbAnswer(false); break;
     case "sbNext": sbNext(); break;
-    case "nudgeTest": nudgeSound(); break;
     case "setGo": S.setTab = b.dataset.g; save(); renderSetTabs(); showTab("settings"); window.scrollTo(0,0); break;
     case "setTab": S.setTab = SET_G[b.dataset.g] ? b.dataset.g : "look"; save(); renderSetTabs(); break;
     case "careFocus": S.careFocus = CARE_F[b.dataset.f] ? b.dataset.f : "all"; save(); renderCareTop(); break;
@@ -4377,7 +4341,6 @@ $("putForm").addEventListener("submit", e=>{
 $("putCancel").addEventListener("click", ()=>putFillForm(null));
 document.addEventListener("change", e=>{
   const id = e.target.id;
-  if(id==="hyperSel"){ S.hyper = +e.target.value; save(); toast(S.hyper ? `🌊 Hyperfocus check after ${fmtH(S.hyper)} on the same thing.` : "🌊 Hyperfocus check off."); hyperTick(); return; }
   if(id==="nagMix"){ S.nagMix = e.target.checked; save(); nagRoll(); return; }
   if(id==="alarmFrom" || id==="alarmTo" || id==="alarmSound" || id==="alarmSkip" || id==="alarmStudy"){
     S.alarm = {...alarmCfg(), from:+$("alarmFrom").value, to:+$("alarmTo").value, sound:$("alarmSound").checked, skip:$("alarmSkip").checked, study:$("alarmStudy").checked}; save(); renderAlarm(); return; }
@@ -4425,7 +4388,6 @@ fileInit().then(bkInit); syncInit();
 setInterval(clock, 1000); clock();
 setInterval(alarmTick, 15000);
 setInterval(nagRoll, 10*60*1000);
-setInterval(hyperTick, 60000);
 setInterval(()=>{ if(fileState==="ok") renderFile(); }, 15000);
 })();
 </script>
