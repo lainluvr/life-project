@@ -1815,7 +1815,7 @@ function save(){
 
 /* ---------- save file on the PC (File System Access API, Chrome/Edge) ---------- */
 // The file handle is remembered in IndexedDB. Browsers ask again for permission after a restart,
-// so then a bar asks for one click to reconnect.
+// so the first click anywhere asks again (see reconnectAll).
 const FS_OK = typeof window.showSaveFilePicker === "function";
 let fileH = null, fileState = "none", fileTimer = null, fileLast = null, fileErr = "";   // none | ok | ask | error
 function idb(mode, fn){
@@ -1860,12 +1860,6 @@ async function fileOpen(){
     S.fileAsk = false; save(); renderAll(); toast(`📂 Loaded ${hd.name}.`, true);
   }catch(e){ if(!(e && e.name==="AbortError")) toast("That file doesn't look like a Life Login save file."); }
 }
-async function fileReconnect(){
-  if(!fileH) return;
-  try{ if((await fileH.requestPermission({mode:"readwrite"}))==="granted"){ fileState = "ok"; await fileWrite(); toast("💾 Reconnected. Saving to your file again."); } }
-  catch(e){ fileState = "error"; fileErr = e && e.message || ""; }
-  renderFile();
-}
 async function fileInit(){
   if(!FS_OK) return renderFile();
   fileH = await idbGet();
@@ -1880,7 +1874,7 @@ function renderBk(){
   if(!BK_OK){ st.className = "warn"; st.textContent = "This browser can't write to a folder. Use Chrome or Edge on your PC for daily backups."; $("bkLinkBtn").hidden = true; return; }
   st.className = bkState==="ok" ? "ok" : bkState==="none" ? "" : "warn";
   st.textContent = bkState==="ok" ? `✓ Daily backups in the "${bkH.name}" folder${bkLast ? ` · updated ${new Date(bkLast).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"})}` : ""}`
-    : bkState==="ask" ? `⚠️ The "${bkH.name}" folder needs one click to reconnect.`
+    : bkState==="ask" ? `⚠️ The "${bkH.name}" folder needs reconnecting: click anywhere in the app, then pick Allow.`
     : bkState==="error" ? `⚠️ Couldn't write a backup: ${bkErr}`
     : "Not set up yet.";
   $("bkLinkBtn").textContent = bkH ? "🗂️ Use a different folder" : "🗂️ Choose backup folder";
@@ -1895,7 +1889,7 @@ function renderFile(){
   const ago = fileLast ? Math.round((Date.now()-fileLast)/1000) : null;
   st.className = fileState==="ok" ? "ok" : fileState==="none" ? "" : "warn";
   st.textContent = fileState==="ok" ? `✓ Auto-saving to ${fileH.name}${ago!==null ? ` · last saved ${ago<5 ? "just now" : ago<60 ? ago+" seconds ago" : new Date(fileLast).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"})}` : ""}`
-    : fileState==="ask" ? `⚠️ ${fileH.name} needs one click to reconnect (browsers ask again after a restart).`
+    : fileState==="ask" ? `⚠️ ${fileH.name} needs reconnecting: click anywhere in the app, then pick Allow.`
     : fileState==="error" ? `⚠️ Couldn't write to ${fileH ? fileH.name : "the file"}: ${fileErr}`
     : "Not set up yet. Your progress is only inside this browser.";
   $("fileLinkBtn").textContent = fileH ? "📁 Use a different file" : "📁 Choose save file";
@@ -1903,11 +1897,11 @@ function renderFile(){
   $("fileUnlinkBtn").hidden = !fileH;
   if((bkState==="ask" || bkState==="error") && fileState!=="ask" && fileState!=="error"){
     bar.hidden = false;
-    bar.innerHTML = `<span class="ic">🗂️</span><div class="grow"><b>${bkState==="ask" ? "Reconnect your backup folder" : "Daily backups aren't updating"}</b><small>${bkState==="ask" ? `The browser asks once after a restart before writing to the "${esc(bkH.name)}" folder again.` : esc(bkErr)}</small></div>
+    bar.innerHTML = `<span class="ic">🗂️</span><div class="grow"><b>${bkState==="ask" ? "Reconnect your backup folder" : "Daily backups aren't updating"}</b><small>${bkState==="ask" ? `Chrome asks again after a restart. Click anywhere in the app, then pick Allow (or "Allow on every visit" if Chrome offers it, so it stops asking).` : esc(bkErr)}</small></div>
       <div class="acts"><button class="btn sm primary" data-act="bkReconnect">Reconnect</button></div>`;
   } else if(fileState==="ask" || fileState==="error"){
     bar.hidden = false;
-    bar.innerHTML = `<span class="ic">💾</span><div class="grow"><b>${fileState==="ask" ? "Reconnect your save file" : "Your save file isn't updating"}</b><small>${fileState==="ask" ? `The browser asks once after a restart before writing to ${esc(fileH.name)} again.` : esc(fileErr)}</small></div>
+    bar.innerHTML = `<span class="ic">💾</span><div class="grow"><b>${fileState==="ask" ? "Reconnect your save file" : "Your save file isn't updating"}</b><small>${fileState==="ask" ? `Chrome asks again after a restart. Click anywhere in the app, then pick Allow (or "Allow on every visit" if Chrome offers it, so it stops asking).` : esc(fileErr)}</small></div>
       <div class="acts"><button class="btn sm primary" data-act="fileReconnect">Reconnect</button></div>`;
   } else if(!fileH && S.fileAsk!==false){
     bar.hidden = false;
@@ -1944,12 +1938,30 @@ async function bkLink(){
     if(bkState==="ok") toast(`🗂️ Daily backups go into the "${hd.name}" folder now.`, true);
   }catch(e){ if(!(e && e.name==="AbortError")) toast("Couldn't set up the backup folder: " + (e && e.message || e)); }
 }
-async function bkReconnect(){
-  if(!bkH) return;
-  try{ if((await bkH.requestPermission({mode:"readwrite"}))==="granted"){ bkState = "ok"; await bkWrite(); } }
-  catch(e){ bkState = "error"; bkErr = e && e.message || ""; }
-  renderFile();
+// After a restart Chrome needs one click from you before the app may write to the save file and backup
+// folder again. The first click or key press anywhere asks for both, one after the other. If you say no,
+// it stops asking on its own until the next restart (the Reconnect button still works).
+let reBusy = false, reOff = false;
+async function reAsk(hd){
+  try{ return await hd.requestPermission({mode:"readwrite"}); }
+  catch(e){ return e && e.name==="SecurityError" ? "later" : "error"; }   // "later": the click had expired, so the next one asks
 }
+async function reconnectAll(manual){
+  if(reBusy || (reOff && !manual)) return; reBusy = true;
+  let got = 0, no = false;
+  if(fileState==="ask" && fileH){ const r = await reAsk(fileH); if(r==="granted"){ fileState = "ok"; await fileWrite(); got++; } else if(r!=="later") no = true; }
+  if(!no && bkState==="ask" && bkH){ const r = await reAsk(bkH); if(r==="granted"){ bkState = "ok"; await bkWrite(); got++; } else if(r!=="later") no = true; }
+  if(no) reOff = true;
+  if(got) toast(fileState==="ask" || bkState==="ask" ? "💾 Reconnected one. Click again for the other." : "💾 Reconnected. Saving to your file and backups again.");
+  reBusy = false; renderFile();
+}
+function reOnInput(e){
+  if(fileState!=="ask" && bkState!=="ask") return;
+  if(e.target && e.target.closest && e.target.closest('[data-act="fileReconnect"],[data-act="bkReconnect"]')) return;
+  reconnectAll(false);
+}
+document.addEventListener("click", reOnInput, true);
+document.addEventListener("keydown", reOnInput, true);
 async function bkInit(){
   if(!BK_OK) return;
   bkH = await idbGetB();
@@ -4253,7 +4265,7 @@ document.addEventListener("click", e=>{
     case "import": $("importFile").click(); break;
     case "fileLink": fileLink(); break;
     case "fileOpen": fileOpen(); break;
-    case "fileReconnect": fileReconnect(); break;
+    case "fileReconnect": reconnectAll(true); break;
     case "bkLink": bkLink(); break;
     case "syncReload": location.reload(); break;
     case "syncCreate": { const f = $("syncAuthForm"), em = f.email.value.trim(), pw = f.pw.value;
@@ -4276,7 +4288,7 @@ document.addEventListener("click", e=>{
     case "syncNow": if(syncDirty()) syncPush(false); else { syncLastOk = Date.now(); renderSync(); toast("✓ Already up to date."); } break;
     case "syncNewPassForm": syncState = "newpass"; syncMsg = ""; renderSync(); break;
     case "syncNewCancel": syncState = syncKey ? "on" : "locked"; syncMsg = ""; renderSync(); break;
-    case "bkReconnect": bkReconnect(); break;
+    case "bkReconnect": reconnectAll(true); break;
     case "bkNow": bkWrite().then(()=>{ if(bkState==="ok") toast("🗂️ Backed up."); }); break;
     case "bkUnlink": if(confirm("Stop daily backups? The files already in the folder stay where they are.")){ bkH = null; bkState = "none"; idbSetB(null); renderFile(); } break;
     case "fileLater": S.fileAsk = false; save(); renderFile(); toast("OK. You can set it up any time in Settings → 💾 Save file."); break;
