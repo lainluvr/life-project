@@ -705,9 +705,77 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 .toast.big{background:var(--panel);color:var(--text);border:1px solid color-mix(in srgb,var(--accent) 50%,var(--line));box-shadow:inset 4px 0 0 var(--accent),0 6px 22px rgba(0,0,0,.18)}
 .flash{animation-duration:.6s} @keyframes fl{from{opacity:.18}to{opacity:0}}
 @media (prefers-reduced-motion:reduce){ *{transition:none!important} .btn:active,nav.tabs button:active{transform:none} }
+
+/* ===== phone layout: app-style bottom bar (Home, Time, Cards, Care, You) ===== */
+.bnav, #dQuick, .mback, .mseg{display:none}
+@media (max-width:700px){
+  nav.tabs, header.top .stats, #widgetBtn, .mhide, #tab-dash .panel.core{display:none!important}
+  header.top{padding:10px 0}
+  header.top .brand{font-size:18px}
+  .wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+  body:not([data-tab="dash"]) #nagBar, body:not([data-tab="dash"]) #fileBar{display:none!important}
+  section{padding-top:12px}
+  .toasts{bottom:calc(76px + env(safe-area-inset-bottom))}
+  .bnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:40;background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  .bnav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;color:var(--muted);font:inherit;font-size:11px;font-weight:600;padding:4px 0;cursor:pointer;border-radius:10px}
+  .bnav button span{font-size:22px;line-height:1;filter:grayscale(.7);opacity:.75;transition:transform .15s var(--ease)}
+  .bnav button.on{color:var(--text)}
+  .bnav button.on span{filter:none;opacity:1;transform:translateY(-1px) scale(1.08)}
+  .bnav button.on::after{content:"";width:18px;height:3px;border-radius:2px;background:var(--accent);margin-top:1px}
+  /* Home */
+  #dQuick{display:grid;gap:8px;margin-bottom:12px}
+  .qbtn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:16px;padding:14px 16px;font:inherit;cursor:pointer;box-shadow:var(--shadow)}
+  .qbtn .qi{font-size:24px;flex:none}
+  .qbtn .grow{flex:1;min-width:0}
+  .qbtn b{display:block;font-size:15.5px}
+  .qbtn small{display:block;color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .qbtn.go{border-color:var(--accent);background:var(--tint2)}
+  .qbtn .qa{color:var(--muted);font-size:20px;flex:none}
+  .duechips{gap:8px}
+  .duechips span{padding:9px 14px;font-size:15px}
+  .dash .panel{padding:14px}
+  /* back to You */
+  .mback{display:inline-flex;align-items:center;gap:4px;border:0;background:none;color:var(--accent);font:inherit;font-weight:600;font-size:15px;padding:2px 0 10px;cursor:pointer}
+  /* Care / Body switch */
+  .mseg{display:flex}
+  /* Cards: one big card at a time */
+  #tab-cards .fcf, #tab-cards .fcb{min-height:min(52vh,420px);padding:22px 20px 16px;border-radius:20px}
+  #tab-cards .fcf p, #tab-cards .fcb p{font-size:20px;display:flex;align-items:center}
+  #tab-cards .fcbtns{position:sticky;bottom:calc(72px + env(safe-area-inset-bottom));gap:10px}
+  #tab-cards .fcbtns .btn{padding:16px 10px;font-size:17px;border-radius:14px}
+  #tab-cards .fc.fcnew{animation:fcin .28s var(--ease) both}
+}
+@keyframes fcin{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){ #tab-cards .fc.fcnew{animation:none} }
+.cardshead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:0 0 8px}
+.cardshead h2{margin:0;font-size:22px}
+.cardshead small{color:var(--muted)}
+.youhead{display:flex;align-items:center;gap:14px}
+.youav{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-size:28px;background:linear-gradient(135deg,var(--accent),var(--accent2));flex:none}
+.youhead b{display:block;font-size:20px}
+.youhead small{color:var(--muted)}
+.youstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:14px;text-align:center}
+.youstats div{background:var(--panel2);border-radius:12px;padding:10px 4px}
+.youstats b{display:block;font-size:18px}
+.youstats small{color:var(--muted);font-size:11px}
+.ylist{padding:4px 0}
+.yrow{display:flex;align-items:center;gap:14px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;color:var(--text);font:inherit;padding:14px 16px;cursor:pointer}
+.yrow:last-child{border-bottom:0}
+.yrow .yi{font-size:22px;flex:none;width:28px;text-align:center}
+.yrow .grow{flex:1;min-width:0}
+.yrow b{display:block;font-size:15.5px}
+.yrow small{display:block;color:var(--muted);font-size:13px}
+.yrow .qa{color:var(--muted);font-size:20px}
 </style>
 </head>
 <body>
+<nav class="bnav" id="bnav" aria-label="Main">
+  <button data-tab="dash"><span>🏠</span>Home</button>
+  <button data-tab="time"><span>⏳</span>Time</button>
+  <button data-tab="cards"><span>🃏</span>Cards</button>
+  <button data-tab="care"><span>🌿</span>Care</button>
+  <button data-tab="you"><span>👤</span>You</button>
+</nav>
 <header class="top">
   <div class="wrap">
     <div class="brand">✨ Life Login</div>
@@ -741,6 +809,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
     <div><b id="dGreet">Hello</b><small id="dDate"></small></div>
     <button class="btn" data-act="widget" id="widgetBtn">⛶ Widget mode</button>
   </div>
+  <div id="dQuick"></div>
   <div class="dash">
     <div class="panel core">
       <h3><span>⏳ Where today is going</span><button class="linkbtn" data-act="goto" data-tab="time">week &amp; patterns</button></h3>
@@ -754,9 +823,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
     <div class="panel">
       <h3><span>🌤️ Today</span><small id="dDueCount"></small></h3>
       <div id="dFocus"></div>
-      <div class="sectlabel" style="margin-top:4px">Care this week <button class="linkbtn" data-act="goto" data-tab="care" style="font-size:11px;margin-left:4px">details</button></div>
-      <div class="cwrow"><span title="Calories">🔥</span><div class="cweek" id="dCareCal"></div></div>
-      <div class="cwrow"><span title="Routines">🧼</span><div class="cweek" id="dCareRou"></div></div>
+      <div class="sectlabel mhide" style="margin-top:4px">Care this week <button class="linkbtn" data-act="goto" data-tab="care" style="font-size:11px;margin-left:4px">details</button></div>
+      <div class="cwrow mhide"><span title="Calories">🔥</span><div class="cweek" id="dCareCal"></div></div>
+      <div class="cwrow mhide"><span title="Routines">🧼</span><div class="cweek" id="dCareRou"></div></div>
       <div class="sectlabel">Routines due</div>
       <div id="dDue"></div>
     </div>
@@ -779,8 +848,25 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
   </div>
 </section>
 
+<!-- CARDS (phone): one big flashcard at a time -->
+<section id="tab-cards">
+  <div class="cardshead"><h2>🃏 Cards</h2><small id="cardsSum"></small></div>
+  <div id="cardsStudy"></div>
+  <p class="sub" style="text-align:center;margin-top:14px"><button class="linkbtn" data-act="goto" data-tab="brain">Add or paste cards</button></p>
+</section>
+
+<!-- YOU (phone): profile and everything else -->
+<section id="tab-you">
+  <div class="card">
+    <div class="youhead"><div class="youav">✨</div><div><b>You</b><small id="youDate"></small></div></div>
+    <div class="youstats" id="youStats"></div>
+  </div>
+  <div class="card ylist" id="youList"></div>
+</section>
+
 <!-- CARE -->
 <section id="tab-care" data-focus="all">
+  <div class="seg mseg"><button class="on">🌿 Care</button><button data-act="goto" data-tab="body">💪 Body</button></div>
  <div class="card covw">
   <div class="cardhead"><h2>🌿 Care overview</h2></div>
   <div class="ctiles" id="careTiles"></div>
@@ -937,6 +1023,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 
 <!-- BRAIN MAP -->
 <section id="tab-brain">
+  <button class="mback" data-act="goto" data-tab="you">‹ You</button>
   <div class="card lr lrhead">
     <div class="cardhead">
       <div><div class="eyebrow">Skills · CompTIA A+</div><h2 class="lrtitle" id="lrTitle">Core 1</h2></div>
@@ -1039,6 +1126,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 
 <!-- PUT OFF -->
 <section id="tab-putoff">
+  <button class="mback" data-act="goto" data-tab="you">‹ You</button>
   <div class="card">
     <div class="cardhead"><h2>✅ To do</h2><small id="putCount"></small></div>
     <p class="sub">Out of sight is out of mind, so this list stays in sight. One item always sits in the bar at the top of every tab until it's done or you snooze it. No deadlines needed.</p>
@@ -1087,6 +1175,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 <!-- PROGRESS -->
 <!-- BODY -->
 <section id="tab-body">
+  <div class="seg mseg"><button data-act="goto" data-tab="care">🌿 Care</button><button class="on">💪 Body</button></div>
  <div class="bodyg">
   <div>
   <div class="card" id="wkCard">
@@ -1134,6 +1223,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 </section>
 
 <section id="tab-progress">
+  <button class="mback" data-act="goto" data-tab="you">‹ You</button>
   <div class="card">
     <div class="cardhead"><h2>📊 Stats</h2><div class="chips" id="stPeriod" style="margin:0"></div></div>
     <p class="sub" id="stRange" style="margin-top:4px"></p>
@@ -1176,6 +1266,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 
 <!-- SETTINGS -->
 <section id="tab-settings" data-sg="look">
+  <button class="mback" data-act="goto" data-tab="you">‹ You</button>
   <div class="chips" id="setTabs" style="margin-bottom:12px"></div>
   <div class="card" data-sg="look">
     <h2>Look</h2>
@@ -3057,6 +3148,7 @@ function fcFill(c){
   f.q.value = c ? c.q : ""; f.a.value = c ? c.a : ""; f.sec.value = c ? (c.sec||"") : lrLastSec(lrExam());
   $("fcCancel").hidden = !c; $("fcAddSum").textContent = c ? "✎ Edit card" : "+ Add a card";
 }
+let cardsLast = null;
 function renderCards(){
   const all = lrCards(), due = fcDue();
   $("fcSum").textContent = all.length ? `${due.length} due · ${all.length} card${all.length>1?"s":""}` : "";
@@ -3078,6 +3170,14 @@ function renderCards(){
         <div class="fcb">${tag}<p>${esc(c.a)}</p><small>Answer</small></div></div></div>
       <div class="row fcbtns">${fcFlip ? `<button class="btn" data-act="fcMiss">✗ Missed it</button><button class="btn primary" data-act="fcGot">✓ Got it</button>` : `<button class="btn primary" data-act="fcFlip">Show answer</button>`}</div>
       <small class="sub">${fcQ.length} left in this round${fcPractice ? ` · practice round: doesn't change when cards come back · <button class="linkbtn" data-act="fcStop">stop</button>` : ""}</small>`;
+  }
+  const cs = $("cardsStudy");
+  if(cs){
+    cs.innerHTML = $("fcStudy").innerHTML;
+    const id = c ? c.id : null, card = cs.querySelector(".fc");
+    if(card && id!==cardsLast) card.classList.add("fcnew");
+    cardsLast = id;
+    const due = fcDue().length; $("cardsSum").textContent = all.length ? (due ? `${due} due` : "all caught up") : "";
   }
   const ff = $("fcForm").elements;
   if(!fcEditing && !ff.sec.value && document.activeElement!==ff.sec) ff.sec.value = lrLastSec(lrExam());
@@ -4069,6 +4169,22 @@ function renderDash(){
   $("dTimer").innerHTML = `<div class="sectlabel">Latest</div>` + storyHtml(t, 3);
   $("dSum").innerHTML = sumHtml(t) + dayHintHtml(t);
   $("dBrain").innerHTML = skDashHtml();
+  { const L = sbLast(), b = blkOf(L.d, L.i), when = `${blockLabel(L.i)}–${endLabel(L.i)}`, fd = fcDue().length;
+    $("dQuick").innerHTML = `<button class="qbtn${b ? "" : " go"}" data-act="fillLast"><span class="qi">${b ? "✅" : "⏳"}</span>
+        <div class="grow"><b>${b ? "Last half-hour filled in" : "Fill in the last half-hour"}</b><small>${when}${b ? ` · ${esc(b.s || RATE[b.r].nm)}` : ""}</small></div><span class="qa">›</span></button>`
+      + (fd ? `<button class="qbtn" data-act="goto" data-tab="cards"><span class="qi">🃏</span><div class="grow"><b>${fd} card${fd>1?"s":""} due</b><small>Tap to start</small></div><span class="qa">›</span></button>` : ""); }
+}
+// You: profile numbers and the way into Skills, To do, Stats and Settings
+function renderYou(){
+  if(!$("youList")) return;
+  $("youDate").textContent = new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
+  const st = (n, l) => `<div><b>${n}</b><small>${l}</small></div>`;
+  $("youStats").innerHTML = st($("hStreak").textContent, "day streak") + st($("hBrain").textContent, "sessions") + st($("hHours").textContent, "productive") + st($("hPut").textContent, "to-dos");
+  const fd = fcDue().length, row = (tab, i, t, s) => `<button class="yrow" data-act="goto" data-tab="${tab}"><span class="yi">${i}</span><div class="grow"><b>${t}</b><small>${s}</small></div><span class="qa">›</span></button>`;
+  $("youList").innerHTML = row("brain", "📘", "Skills", `A+ plan, session log, add or paste cards${fd ? ` · ${fd} due` : ""}`)
+    + row("putoff", "✅", "To do", `${$("hPut").textContent} on your list`)
+    + row("progress", "📊", "Stats", "Weeks, patterns and trends")
+    + row("settings", "⚙️", "Settings", "Reminder, study mode, sync, look");
 }
 function applyTheme(){
   if(S.theme==="auto") document.documentElement.removeAttribute("data-theme");
@@ -4087,7 +4203,7 @@ function renderAll(){
   TT = timeTotals();
   renderHeader(); renderRoutines(); renderNutri(); renderWeight(); renderBody(); calTgtLabel(); renderCareTop();
   renderBrain(); renderTime(); renderPut(); renderProgress(); renderReview(); renderLog();
-  applyTheme(); renderDash(); renderAlarm(); renderSetTabs();
+  applyTheme(); renderDash(); renderAlarm(); renderSetTabs(); renderYou();
 }
 
 /* ---------- tabs ---------- */
@@ -4097,9 +4213,14 @@ function showTab(name){
   document.querySelectorAll("section").forEach(s=>s.classList.toggle("on", s.id==="tab-"+name));
   document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on", b.dataset.tab===name));
   try{ localStorage.setItem(KEY+".tab", name); }catch(e){}
+  document.body.dataset.tab = name;
+  const bn = {dash:"dash", time:"time", cards:"cards", care:"care", body:"care"}[name] || "you";
+  document.querySelectorAll("#bnav button").forEach(b=>b.classList.toggle("on", b.dataset.tab===bn));
+  if(name==="dash") renderDash(); else if(name==="you") renderYou();   // fresh counts (cards due, to-dos) each time you land here
   nagRoll();
 }
 $("tabs").addEventListener("click", e=>{ const b = e.target.closest("button[data-tab]"); if(b) showTab(b.dataset.tab); });
+$("bnav").addEventListener("click", e=>{ const b = e.target.closest("button[data-tab]"); if(b){ showTab(b.dataset.tab); window.scrollTo(0,0); } });
 function setWidget(on){
   if(on) showTab("dash");
   S.widget = on; save();
@@ -4114,6 +4235,7 @@ document.addEventListener("click", e=>{
   const id = b.dataset.id;
   switch(b.dataset.act){
     case "goto": showTab(b.dataset.tab); window.scrollTo(0,0); break;
+    case "fillLast": { const L = sbLast(); openBlk(L.d, L.i, L.i, false); break; }
     case "widget": setWidget(!S.widget); break;
     case "blkRepeat": {
       const rg = repeatGap(); if(!rg) break; const t = today();
