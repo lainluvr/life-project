@@ -3640,9 +3640,10 @@ function recentSummaries(){
   return [...seen.values()].sort((a,b)=>(a.rec-b.rec) || (b.n-a.n)).slice(0,14);
 }
 // --- the "what did you do?" dialog ---
-function openBlk(d, a, b, fromTap){
+function openBlk(d, a, b, fromTap, tap){
   if(a>b) [a,b] = [b,a];
-  dlgSel = {d, a, b, fromTap};
+  if(!(tap>=a && tap<=b)) tap = a;   // the half-hour you actually tapped, for "Only ..."
+  dlgSel = {d, a, b, fromTap, tap};
   const first = blkOf(d,a), same = first && [...Array(b-a+1).keys()].every(k=>{ const x = blkOf(d,a+k); return x && x.r===first.r && normS(x.s)===normS(first.s); });
   const n = b-a+1;
   $("blkWhen").textContent = `${d===today()?"Today":niceDate(d)} · ${blockLabel(a)} – ${endLabel(b)} · ${fmtH(n/2)}`;
@@ -3652,6 +3653,7 @@ function openBlk(d, a, b, fromTap){
   const anyFilled = [...Array(n).keys()].some(k=>blkOf(d,a+k));
   $("blkClear").hidden = !anyFilled;
   $("blkOne").hidden = !(fromTap && n>1);
+  $("blkOne").textContent = `Only ${blockLabel(tap)}–${endLabel(tap)}`;
   const rec = recentSummaries();
   $("blkChipsWrap").hidden = !rec.length;
   $("blkChips").innerHTML = rec.map(x=>`<button type="button" class="chip" data-act="blkUse" data-s="${esc(x.s)}" data-r="${x.r}"><i class="rd" style="background:${RATE[x.r].c}"></i>${esc(x.s)}</button>`).join("");
@@ -3756,14 +3758,14 @@ function endSel(){
   if(!sel) return;
   const p = sel; sel = null;
   p.grid.querySelectorAll(".blk.sel").forEach(c=>c.classList.remove("sel"));
-  let a = Math.min(p.a,p.b), b = Math.max(p.a,p.b), fromTap = false;
+  let a = Math.min(p.a,p.b), b = Math.max(p.a,p.b), fromTap = false; const tap = p.a;
   if(!p.moved){
     // tapping a filled block selects the whole stretch with the same summary
     const x = blkOf(p.date, a);
     if(x){ fromTap = true; const same = i => { const y = blkOf(p.date,i); return y && y.r===x.r && normS(y.s)===normS(x.s); };
       while(a>0 && same(a-1)) a--; while(b<47 && same(b+1)) b++; }
   }
-  openBlk(p.date, a, b, fromTap);
+  openBlk(p.date, a, b, fromTap, tap);
 }
 document.addEventListener("pointerup", endSel);
 document.addEventListener("pointercancel", ()=>{ if(sel){ sel.grid.querySelectorAll(".blk.sel").forEach(c=>c.classList.remove("sel")); sel = null; } });
@@ -4266,7 +4268,7 @@ document.addEventListener("click", e=>{
     case "editRun": openBlk(b.dataset.d, +b.dataset.a, +b.dataset.b, false); break;
     case "blkRate": dlgRate = b.dataset.r; renderRates(); break;
     case "blkUse": saveBlk(b.dataset.s, b.dataset.r); break;
-    case "blkOne": if(dlgSel){ const i = dlgSel.a; $("blkDlg").close(); openBlk(dlgSel.d, i, i, false); } break;
+    case "blkOne": if(dlgSel){ const i = dlgSel.tap; $("blkDlg").close(); openBlk(dlgSel.d, i, i, false); } break;
     case "blkClear": clearBlk(); break;
     case "blkCancel": $("blkDlg").close(); dlgSel = null; break;
     case "dayPrev": timeDate = shiftDate(timeDate||today(), -1); renderTime(); break;
