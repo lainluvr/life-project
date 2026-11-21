@@ -124,6 +124,7 @@ details summary{cursor:pointer;color:var(--muted);margin-top:8px}
 .rtile.done .rn{text-decoration:line-through;text-decoration-color:var(--muted)}
 .rtile .rck{flex:none;color:var(--accent);font-weight:800}
 .rclear{margin:2px 0 12px;font-size:14px;color:var(--muted)}
+.dnutri:not(:empty){margin-top:12px;padding-top:8px;border-top:1px solid var(--line)}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow);min-width:0}
 .panel h3{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:6px}
 .panel h3 .linkbtn{font-size:12px;text-transform:none;letter-spacing:0}
@@ -912,11 +913,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
         <input name="text" placeholder="what (optional)" maxlength="100" aria-label="Food">
         <button class="btn sm primary">Log</button>
       </form>
-    </div>
-
-    <div class="panel" data-pid="water">
-      <h3><span>💧 Water</span><button class="linkbtn" data-act="goto" data-tab="care">open</button></h3>
-      <div id="dNutri"></div>
+      <div id="dNutri" class="dnutri"></div>
     </div>
 
     <div class="panel" data-pid="todo">
@@ -1630,7 +1627,7 @@ function CAT_SEED(){
     C("🎮","Fun on purpose","life","#e3a92b","mental")
   ];
 }
-const DATA_V = 32;
+const DATA_V = 33;
 function defaults(){
   return {
     v:DATA_V, totalXp:0, maxLevel:1, best:0,
@@ -1645,7 +1642,7 @@ function defaults(){
     ],
     items:[],
     routines:[
-      {id:uid(),name:"Brush teeth",icon:"🪥",every:1,times:2},
+      {id:uid(),name:"Brush teeth",icon:"🪥",every:1,times:1},
       {id:uid(),name:"Shower",icon:"🚿",every:1,times:1},
       {id:uid(),name:"Skincare / wash face",icon:"🧴",every:1,times:1},
       {id:uid(),name:"Floss",icon:"🦷",every:1,times:1},
@@ -2011,6 +2008,11 @@ Quiz, 8 questions, about 5 right. Strong on: airplane mode, 5G vs 4G, MDM, BYOD 
     for(const d in (s.tlog||{})) s.tlog[d] = s.tlog[d].map(b=>b && (b.r==="lg" || b.r==="o") ? {...b, r:b.r==="lg" ? "g" : "r"} : b);
     if(s.rateLast==="lg") s.rateLast = "g"; else if(s.rateLast==="o") s.rateLast = "r";
     s.v = 32;
+  }
+  if(s.v<33){
+    // v33: Brush teeth is once a day (one tile on the dashboard)
+    (s.routines||[]).forEach(r=>{ if(/^brush teeth$/i.test(String(r.name).trim()) && r.every===1 && r.times>1) r.times = 1; });
+    s.v = 33;
   }
   return s;
 }
@@ -4455,7 +4457,7 @@ document.addEventListener("touchmove", e=>{ if(e.touches.length>1 && isPhone()) 
 $("bnav").addEventListener("click", e=>{ const b = e.target.closest("button[data-tab]"); if(b){ showTab(b.dataset.tab); window.scrollTo(0,0); } });
 // ---- dashboard layout: a fixed, tidy grid. Edit layout changes the order and hides widgets.
 // S.dashLay = {order:[widgets], hide:[widgets]}, kept per device (dashLay is in SYNC_LOCAL).
-const DASH_ALL = ["time","today","todo","food","water","skills","glance","cal","heat","weight"];
+const DASH_ALL = ["time","today","todo","food","skills","glance","cal","heat","weight"];
 let dashEdit = false, dashDrag = null;
 function dashLay(){
   const L = S.dashLay || {};
