@@ -125,6 +125,65 @@ details summary{cursor:pointer;color:var(--muted);margin-top:8px}
 .rtile .rck{flex:none;color:var(--accent);font-weight:800}
 .rclear{margin:2px 0 12px;font-size:14px;color:var(--muted)}
 .dnutri:not(:empty){margin-top:12px;padding-top:8px;border-top:1px solid var(--line)}
+/* ---- tidy-up: shared bits ---- */
+header.top .stats{display:none}
+.qh{border:1px solid var(--line);background:none;color:var(--muted);width:22px;height:22px;border-radius:50%;font:inherit;font-size:12px;font-weight:700;cursor:pointer;flex:none;padding:0;vertical-align:middle;margin-left:4px;line-height:1}
+.qh:hover{border-color:var(--accent);color:var(--accent)}
+.hint{margin-top:0}
+.pgo{border:0;background:none;color:var(--muted);font:inherit;font-size:22px;line-height:1;padding:0 4px;cursor:pointer;text-transform:none;letter-spacing:0}
+.pgo:hover{color:var(--accent)}
+.dfocus{display:block;color:var(--accent);font-weight:600;font-size:13px;margin-top:2px}
+.dfocus:empty{display:none}
+.dreview{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid var(--accent);background:var(--tint2);color:var(--text);border-radius:16px;padding:12px 16px;font:inherit;cursor:pointer;margin-bottom:12px}
+.dreview .qi{font-size:24px} .dreview .grow{flex:1;min-width:0} .dreview b{display:block} .dreview small{color:var(--muted)} .dreview .qa{font-size:20px;color:var(--muted)}
+.skline{display:flex;align-items:center;gap:12px}
+.skline .grow{flex:1;min-width:0}
+.skline b{display:block;font-size:17px}
+.skline small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+/* Care / Body switch on every screen */
+.mseg{display:flex;max-width:520px;margin:0 auto 14px}
+/* routines: compact tiles, editing tucked behind ✎ Edit */
+.rrgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.rr{display:flex;align-items:center;border-radius:12px;background:var(--panel2);border:1px solid var(--line);min-width:0}
+.rr.due{border-color:color-mix(in srgb,var(--accent) 55%,var(--line))}
+.rr.over{border-color:color-mix(in srgb,var(--warn) 65%,var(--line))}
+.rr.full{background:transparent;border-style:dashed;opacity:.6}
+.rr.full .rmain b{text-decoration:line-through;text-decoration-color:var(--muted)}
+.rmain{flex:1;min-width:0;display:flex;align-items:center;gap:10px;border:0;background:none;color:var(--text);font:inherit;text-align:left;padding:9px 10px;cursor:pointer;border-radius:12px}
+.rmain:active{transform:scale(.98)}
+.rmain .ic{font-size:20px;flex:none;line-height:1}
+.rmain .grow{flex:1;min-width:0}
+.rmain b{display:block;font-size:14px;overflow-wrap:anywhere}
+.rmain small{display:block;font-size:11.5px;color:var(--muted);margin-top:1px}
+.rr.over .rmain small{color:var(--warn);font-weight:600}
+.rmain .rck{color:var(--accent);font-weight:800}
+.rmain .rn2{font-size:12px;color:var(--muted);font-weight:700}
+.rr .acts{display:flex;gap:0;padding-right:4px;flex:none}
+#routCard:not(.editing) .rr .ed{display:none}
+.qpick:has(.chips:empty){display:none}
+.twocol{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:6px 18px}
+.twocol h3{font-size:14px;margin:0}
+/* to-do: Done + a ⋯ menu */
+.more{position:relative}
+.more > summary{list-style:none;cursor:pointer;font-size:20px;line-height:1;padding:4px 8px}
+.more > summary::-webkit-details-marker{display:none}
+.more .menu{position:absolute;right:0;top:calc(100% + 4px);z-index:30;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;min-width:200px}
+.more .menu > *{border:0;background:none;color:var(--text);font:inherit;font-size:14px;text-align:left;padding:9px 10px;border-radius:8px;cursor:pointer;text-decoration:none;white-space:nowrap}
+.more .menu > *:hover{background:var(--tint2)}
+details.putdone > summary{cursor:pointer;list-style:none;display:flex;align-items:baseline;gap:10px}
+details.putdone > summary::-webkit-details-marker{display:none}
+details.putdone > summary h2{margin:0}
+details.putdone > summary::after{content:"›";margin-left:auto;color:var(--muted);font-size:20px;transition:transform .2s}
+details.putdone[open] > summary::after{transform:rotate(90deg)}
+details.putdone[open] > summary{margin-bottom:8px}
+/* Skills: sub-tabs */
+.lrtabs{margin:0 0 14px;flex-wrap:wrap}
+.lrtabs button{flex:1 1 auto;white-space:nowrap}
+#tab-brain .lrgrid{grid-template-columns:minmax(0,1fr)!important}
+#tab-brain[data-lt="study"] .card[data-lt]:not([data-lt="study"]),
+#tab-brain[data-lt="cards"] .card[data-lt]:not([data-lt="cards"]),
+#tab-brain[data-lt="log"] .card[data-lt]:not([data-lt="log"]),
+#tab-brain[data-lt="map"] .card[data-lt]:not([data-lt="map"]){display:none}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow);min-width:0}
 .panel h3{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:6px}
 .panel h3 .linkbtn{font-size:12px;text-transform:none;letter-spacing:0}
@@ -411,8 +470,6 @@ body.nagfix{padding-bottom:190px}
   #tab-care[data-focus="nutrition"] .carel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"cal food";gap:0 14px;align-items:start}
   #tab-care[data-focus="nutrition"] #calCard{grid-area:cal}
   #tab-care[data-focus="nutrition"] #foodCard{grid-area:food}
-  #tab-care[data-focus="routines"] #routines{columns:2;column-gap:14px}
-  #tab-care[data-focus="routines"] #routines .rt{break-inside:avoid}
 }
 .care{display:grid;grid-template-columns:minmax(0,1fr);gap:0 14px;align-items:start}
 @media (min-width:1000px){ .care{grid-template-columns:minmax(0,2fr) minmax(0,1fr)} }
@@ -779,7 +836,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 @media (prefers-reduced-motion:reduce){ *{transition:none!important} .btn:active,nav.tabs button:active{transform:none} }
 
 /* ===== phone layout: app-style bottom bar (Home, Time, Cards, Care, You) ===== */
-.bnav, #dQuick, .mback, .mseg{display:none}
+.bnav, #dQuick, .mback{display:none}
 @media (max-width:700px){
   html, body{overflow-x:hidden;overscroll-behavior:none;touch-action:pan-y}
   input, textarea, select{font-size:16px!important}   /* 16px stops the phone zooming in when you tap a box */
@@ -876,7 +933,6 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
   <button data-tab="time">⏳ Time</button>
   <button data-tab="putoff">✅ To do</button>
   <button data-tab="care">🌿 Care</button>
-  <button data-tab="body">💪 Body</button>
   <button data-tab="settings">⚙️ Settings</button>
 </nav>
 
@@ -886,18 +942,17 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 <!-- DASHBOARD -->
 <section id="tab-dash">
   <div class="dashbar">
-    <div><b id="dGreet">Hello</b><small id="dDate"></small></div>
+    <div><b id="dGreet">Hello</b><small id="dDate"></small><small id="dFocus" class="dfocus"></small></div>
     <button class="btn" data-act="dashEdit" id="dashEditBtn">✏️ Edit layout</button>
   </div>
+  <div id="dReview"></div>
   <div id="dQuick"></div>
   <div class="dash">
     <div class="panel core" data-pid="time">
-      <h3><span>⏳ Where today is going</span><button class="linkbtn" data-act="goto" data-tab="time">week &amp; patterns</button></h3>
+      <h3><span>⏳ Where today is going</span><button class="pgo" data-act="goto" data-tab="time" title="Week and patterns">›</button></h3>
       <div id="dBrush"></div>
       <div id="dDay"></div>
       <div id="dSum"></div>
-      <div id="dTimer"></div>
-      <small>Tap or drag across the half-hour blocks, then write what you did and pick a color from green (productive) through yellow (neutral) to red (dead time). Fill it in whenever you remember.</small>
     </div>
 
     <div class="panel" data-pid="today">
@@ -906,7 +961,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
     </div>
 
     <div class="panel" data-pid="food">
-      <h3><span>🍽️ Food today</span><button class="linkbtn" data-act="goto" data-tab="care">open</button></h3>
+      <h3><span>🍽️ Food today</span><button class="pgo" data-act="careGo" data-f="nutrition" title="Open Food">›</button></h3>
       <div id="dCal"></div>
       <form id="dCalForm" class="dcalform">
         <input name="kcal" type="number" min="0" max="9999" placeholder="kcal" required aria-label="Calories">
@@ -917,17 +972,17 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
     </div>
 
     <div class="panel" data-pid="todo">
-      <h3><span>✅ To do</span><button class="linkbtn" data-act="goto" data-tab="putoff">open</button></h3>
+      <h3><span>✅ To do</span><button class="pgo" data-act="goto" data-tab="putoff" title="Open To do">›</button></h3>
       <div id="dTodo"></div>
     </div>
 
     <div class="panel" data-pid="skills">
-      <h3><span>📘 Skills</span><button class="linkbtn" data-act="goto" data-tab="brain">open</button></h3>
+      <h3><span>📘 Skills</span><button class="pgo" data-act="goto" data-tab="brain" title="Open Skills">›</button></h3>
       <div id="dBrain"></div>
     </div>
 
     <div class="panel" data-pid="glance">
-      <h3><span>📊 <span id="dKpiLbl">This week</span></span><button class="linkbtn" data-act="setGo" data-g="stats">more stats</button></h3>
+      <h3><span>📊 <span id="dKpiLbl">This week</span></span><button class="pgo" data-act="setGo" data-g="stats" title="More stats">›</button></h3>
       <div class="kpis" id="dKpi"></div>
     </div>
 
@@ -937,14 +992,13 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
     </div>
 
     <div class="panel" data-pid="heat">
-      <h3><span>🗓️ Consistency</span></h3>
+      <h3><span title="Each square is a day (columns are weeks). Greener means more things done.">🗓️ Consistency</span></h3>
       <div id="heat"></div>
       <small id="heatInfo" style="display:block;margin-top:6px"></small>
-      <small class="sub">Each square is a day (columns are weeks). Greener means more things done.</small>
     </div>
 
     <div class="panel" data-pid="weight">
-      <h3><span>⚖️ Weight</span><button class="linkbtn" data-act="goto" data-tab="body">log</button></h3>
+      <h3><span>⚖️ Weight</span><button class="pgo" data-act="goto" data-tab="body" title="Log your weight">›</button></h3>
       <div id="dWeight"></div>
     </div>
   </div>
@@ -969,8 +1023,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 
 <!-- CARE -->
 <section id="tab-care" data-focus="all">
-  <div class="seg mseg"><button class="on">🌿 Care</button><button data-act="goto" data-tab="body">💪 Body</button></div>
- <div class="card covw">
+  <div class="seg mseg" id="careSeg"><button data-act="careGo" data-f="nutrition">🍽️ Food</button><button data-act="careGo" data-f="routines">🧼 Routines</button><button data-act="goto" data-tab="body">💪 Body</button></div>
+ <div class="card covw" hidden>
   <div class="cardhead"><h2>🌿 Care overview</h2></div>
   <div class="ctiles" id="careTiles"></div>
   <div class="sectlabel" style="margin-top:16px">How each day went</div>
@@ -986,14 +1040,43 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
   </details>
   <div class="ksum" id="cdKey" style="margin-top:8px"></div>
  </div>
- <div class="seg carebar" id="careFocus" role="tablist" aria-label="What to show"></div>
  <div class="care">
   <div class="carel">
   <div class="card core" id="calCard">
-    <div class="cardhead"><h2>🔥 Calories</h2>
+    <div class="cardhead"><h2>🍽️ Food</h2>
       <div class="daynav"><button class="btn sm" data-act="calPrev" aria-label="Previous day">◀</button><b id="calDate"></b><button class="btn sm" data-act="calNext" aria-label="Next day">▶</button></div></div>
     <div id="calSum"></div>
-    <div class="sectlabel">Last 7 days</div>
+    <form id="calForm" class="row">
+      <select name="meal" id="calMeal" style="flex:0 1 120px" aria-label="Meal">
+        <option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option>
+      </select>
+      <input name="text" placeholder="Food (optional)" maxlength="100" aria-label="Food">
+      <input name="kcal" type="number" min="0" max="9999" placeholder="kcal" required style="flex:0 1 90px" aria-label="Calories">
+      <input name="p" type="number" min="0" max="999" placeholder="protein g" style="flex:0 1 100px" aria-label="Protein grams (optional)">
+      <label class="chk"><input type="checkbox" name="keep"> save to My foods</label>
+      <button class="btn primary">Log</button>
+    </form>
+    <div id="calLog"></div>
+    <div class="qpick"><div class="sectlabel">My foods <small>(tap to log)</small></div><div class="chips" id="calMine"></div></div>
+    <div class="qpick"><div class="sectlabel">Recent</div><div class="chips" id="calRecent"></div></div>
+    <details class="calest"><summary>Don't know the number? Rough guess</summary><div class="chips" id="calGuess" style="margin-top:8px"></div></details>
+    <div class="row"><button class="btn" data-act="calCopy">⧉ Copy yesterday's food to this day</button></div>
+    <div class="sectlabel" style="display:flex;justify-content:space-between;align-items:baseline"><span>💧 Water &amp; other trackers</span><small id="nutriCount"></small></div>
+    <div id="nutri"></div>
+    <details class="calest">
+      <summary>Add a tracker</summary>
+      <form id="nutriForm" class="row">
+        <input name="icon" placeholder="🍎" maxlength="4" style="flex:0 0 64px" aria-label="Emoji">
+        <input name="name" placeholder="New tracker (e.g. Fiber)" required maxlength="40">
+        <input name="target" type="number" min="1" placeholder="Daily goal" required>
+        <input name="unit" placeholder="Unit (cups…)" maxlength="15">
+        <button class="btn primary">Add</button>
+      </form>
+    </details>
+  </div>
+
+  <div class="card" id="foodCard">
+    <h2>📈 Calories this week</h2>
     <div class="cweek" id="week"></div>
     <div id="calWeekBar"></div>
     <small class="sub" id="calWeekSub"></small>
@@ -1037,52 +1120,17 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
     </details>
       </div>
     </details>
-    <div class="sectlabel" style="display:flex;justify-content:space-between;align-items:baseline"><span>💧 Water &amp; other trackers</span><small id="nutriCount"></small></div>
-    <div id="nutri"></div>
-    <details class="calest">
-      <summary>Add a tracker</summary>
-      <form id="nutriForm" class="row">
-        <input name="icon" placeholder="🍎" maxlength="4" style="flex:0 0 64px" aria-label="Emoji">
-        <input name="name" placeholder="New tracker (e.g. Fiber)" required maxlength="40">
-        <input name="target" type="number" min="1" placeholder="Daily goal" required>
-        <input name="unit" placeholder="Unit (cups…)" maxlength="15">
-        <button class="btn primary">Add</button>
-      </form>
-    </details>
-  </div>
-
-  <div class="card" id="foodCard">
-    <h2>🍽️ Food log</h2>
-    <div id="calLog"></div>
-    <div class="sectlabel">Log something</div>
-    <form id="calForm" class="row">
-      <select name="meal" id="calMeal" style="flex:0 1 120px" aria-label="Meal">
-        <option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option>
-      </select>
-      <input name="text" placeholder="Food (optional)" maxlength="100" aria-label="Food">
-      <input name="kcal" type="number" min="0" max="9999" placeholder="kcal" required style="flex:0 1 90px" aria-label="Calories">
-      <input name="p" type="number" min="0" max="999" placeholder="protein g" style="flex:0 1 100px" aria-label="Protein grams (optional)">
-      <label class="chk"><input type="checkbox" name="keep"> save to My foods</label>
-      <button class="btn primary">Log</button>
-    </form>
-    <div class="sectlabel">Don't know the number? Rough guess is fine</div>
-    <div class="chips" id="calGuess"></div>
-    <div class="sectlabel">My foods <small>(tap to log)</small></div>
-    <div class="chips" id="calMine"></div>
-    <div class="sectlabel">Recent</div>
-    <div class="chips" id="calRecent"></div>
-    <div class="row"><button class="btn" data-act="calCopy">⧉ Copy yesterday's food to this day</button></div>
   </div>
 
   </div>
 
   <div class="carer">
   <div class="card" id="routCard">
-    <div class="cardhead"><h2>🧼 Routines</h2><small id="careCount"></small></div>
-    <p class="sub">Everything you keep up with, in one list. Daily ones reset every day, "× a week" ones just need doing that many times by Sunday, and things like cutting your nails come back on their own schedule and light up when due. Did something on an earlier day? Use 📅 to log it.</p>
+    <div class="cardhead"><h2>🧼 Routines <button type="button" class="qh" data-act="hint" data-k="rout" title="How this works">?</button></h2><span class="tight"><small id="careCount"></small><button type="button" class="btn sm" data-act="rEditMode" id="rEditBtn">✎ Edit</button></span></div>
+    <p class="sub hint" data-k="rout" hidden>Tap a routine when you've done it, and tap a done one to undo it. Everything you keep up with, in one list. Daily ones reset every day, "× a week" ones just need doing that many times by Sunday, and things like cutting your nails come back on their own schedule and light up when due. Did something on an earlier day? Tap ✎ Edit, then 📅 to log it.</p>
     <div id="routines"></div>
     <div id="rcWrap" hidden>
-      <div class="sectlabel" style="margin-top:14px">📅 Due this week</div>
+     <details class="calest"><summary>📅 What's coming up this week</summary>
       <div class="rcgrid wk" id="rcWeek"></div>
       <div class="ksum" style="margin-top:6px"><span><i class="rck due"></i>due</span><span><i class="rck over"></i>overdue</span><small class="sub" style="margin:0">Mark one done and it leaves the calendar, then comes back on its next date.</small></div>
       <details class="calyear" id="rcMonBox">
@@ -1093,8 +1141,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
         </div>
         <div class="rcgrid" id="rcGrid"></div>
       </details>
+     </details>
     </div>
-    <form id="routineForm" class="row">
+    <details class="calest" id="rAddBox"><summary>+ Add a routine</summary>
+    <form id="routineForm" class="row" style="margin-top:8px">
       <input name="icon" placeholder="🧽" maxlength="4" style="flex:0 0 64px" aria-label="Emoji">
       <input name="name" placeholder="New routine (e.g. Wash face)" required maxlength="60">
       <select name="sched">
@@ -1118,6 +1168,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
       <button class="btn primary" id="rSave">Add</button>
       <button type="button" class="btn" data-act="rEditCancel" id="rCancel" hidden>Cancel</button>
     </form>
+    </details>
   </div>
   </div>
  </div>
@@ -1133,10 +1184,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
     </div>
     <div class="lrstats" id="lrStats"></div>
   </div>
+  <div class="seg lrtabs" id="lrTabs"></div>
   <div class="lrgrid" id="lrMain">
     <div>
-      <div class="card lr" id="lrGuide"></div>
-      <div class="card lr">
+      <div class="card lr" id="lrGuide" data-lt="study"></div>
+      <div class="card lr" data-lt="cards">
         <div class="cardhead"><h3 class="lrh">🃏 Flashcards</h3><small id="fcSum"></small></div>
         <div id="fcStudy"></div>
         <details class="fcmore" id="fcAddBox"><summary id="fcAddSum">+ Add a card</summary>
@@ -1154,7 +1206,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
         </details>
         <details class="fcmore" id="fcListBox"><summary id="fcListSum">All cards</summary><div id="fcList"></div></details>
       </div>
-      <div class="card lr">
+      <div class="card lr" data-lt="study">
         <h3 class="lrh" id="lrFormTitle">Log a session</h3>
         <form id="lrForm">
           <label id="lrSkillWrap">Skill<select name="skill" id="lrSkillSel" required></select></label>
@@ -1167,17 +1219,17 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
           <div class="row"><button class="btn primary">Save session</button><button type="button" class="btn" data-act="lrCancel" id="lrCancel" hidden>Cancel edit</button></div>
         </form>
       </div>
-      <div class="card lr">
+      <div class="card lr" data-lt="log">
         <div class="cardhead"><h3 class="lrh">Session log</h3><small id="lrLogSum"></small></div>
         <div id="lrLog"></div>
       </div>
     </div>
     <div>
-      <div class="card lr">
+      <div class="card lr" data-lt="map">
         <div class="cardhead"><h3 class="lrh">Exam map</h3><small>what's on the tests</small></div>
         <div id="lrMap"></div>
       </div>
-      <div class="card lr">
+      <div class="card lr" data-lt="log">
         <div class="cardhead"><h3 class="lrh">Overview</h3><small id="lrSumDate"></small></div>
         <div id="lrSum"></div>
         <div class="row lrsumbtns">
@@ -1199,9 +1251,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
  <div class="care">
   <div class="carel">
   <div class="card core">
-    <div class="cardhead"><h2>⏳ Your day in half-hours</h2>
+    <div class="cardhead"><h2>⏳ Your day in half-hours <button type="button" class="qh" data-act="hint" data-k="time" title="How this works">?</button></h2>
       <span class="tight"><button class="btn sm" data-act="dayPrev" aria-label="Previous day">◀</button><b id="tDate" style="white-space:nowrap"></b><button class="btn sm" data-act="dayNext" aria-label="Next day">▶</button></span></div>
-    <p class="sub">Tap a block, or drag across several, then write a quick summary of what you did and pick green (productive), yellow (neutral) or red (dead time).
+    <p class="sub hint" data-k="time" hidden>Tap a block, or drag across several, then write a quick summary of what you did and pick green (productive), yellow (neutral) or red (dead time).
       It doesn't have to be live. Hours later, or the next morning, is fine. Dead time isn't "bad". It's data. <button class="linkbtn" data-act="setGo" data-g="remind" id="tAlarm"></button></p>
     <div id="tBrush"></div>
     <div id="tDay"></div>
@@ -1216,12 +1268,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
   </div>
   <div class="carer">
   <div class="card">
-    <div class="cardhead"><h2>🟢 Where green time went</h2><small id="greenSum"></small></div>
-    <div id="greenTop"></div>
-  </div>
-  <div class="card">
-    <div class="cardhead"><h2>🔴 Dead time</h2><small id="deadSum"></small></div>
-    <div id="dead"></div>
+    <h2>📊 This week</h2>
+    <div class="twocol">
+      <div><div class="cardhead"><h3>🟢 Green time</h3><small id="greenSum"></small></div><div id="greenTop"></div></div>
+      <div><div class="cardhead"><h3>🔴 Dead time</h3><small id="deadSum"></small></div><div id="dead"></div></div>
+    </div>
   </div>
   </div>
  </div>
@@ -1231,10 +1282,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 <section id="tab-putoff">
   <button class="mback" data-act="goto" data-tab="you">‹ You</button>
   <div class="card">
-    <div class="cardhead"><h2>✅ To do</h2><small id="putCount"></small></div>
-    <p class="sub">Out of sight is out of mind, so this list stays in sight. One item always sits in the bar at the top of every tab until it's done or you snooze it. No deadlines needed.</p>
+    <div class="cardhead"><h2>✅ To do <button type="button" class="qh" data-act="hint" data-k="todo" title="How this works">?</button></h2><small id="putCount"></small></div>
+    <p class="sub hint" data-k="todo" hidden>Out of sight is out of mind, so this list stays in sight. One item always sits in the bar at the top of every tab until it's done or you snooze it. No deadlines needed.</p>
     <form id="putForm" class="putform">
-      <input name="text" placeholder="What do you need to do? (e.g. Buy a privacy screen for my phone)" required maxlength="100" aria-label="To-do item">
+      <input name="text" placeholder="What do you need to do?" required maxlength="100" aria-label="To-do item">
       <div class="row">
         <select name="kind" aria-label="Kind">
           <option value="task">✅ Task</option>
@@ -1243,6 +1294,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
           <option value="errand">📦 Errand / go somewhere</option><option value="clean">🧹 Clean / sort</option>
           <option value="other">🪨 Other</option>
         </select>
+        <button class="btn primary" id="putSubmit">Add</button><button type="button" class="btn" id="putCancel" hidden>Cancel edit</button>
+      </div>
+      <details class="calest" id="putMore"><summary>First step, link or reason (optional)</summary>
+      <div class="row" style="margin-top:8px">
         <select name="why" aria-label="Why it might get put off">
           <option value="none">Why might it get put off? (optional)</option>
           <option value="forget">Why? I just forget about it</option><option value="start">Why? Don't know where to start</option>
@@ -1255,7 +1310,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
         <input name="step" placeholder="Tiny first step, optional (e.g. Look up my phone model)" maxlength="120" aria-label="Tiny first step">
         <input name="link" placeholder="Link (optional)" maxlength="500" aria-label="Link">
       </div>
-      <div class="row"><button class="btn primary" id="putSubmit">Add to the list</button><button type="button" class="btn" id="putCancel" hidden>Cancel edit</button></div>
+      </details>
     </form>
   </div>
   <div class="card">
@@ -1266,11 +1321,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
     <h2>💤 Snoozed</h2>
     <div id="putSnoozed"></div>
   </div>
-  <div class="card">
-    <h2>🎉 Done</h2>
-    <p class="sub" id="putDoneSub"></p>
+  <details class="card putdone">
+    <summary><h2>🎉 Done</h2><small class="sub" id="putDoneSub"></small></summary>
     <div id="putDone"></div>
-  </div>
+  </details>
 </section>
 
 
@@ -1278,12 +1332,12 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 <!-- PROGRESS -->
 <!-- BODY -->
 <section id="tab-body">
-  <div class="seg mseg"><button data-act="goto" data-tab="care">🌿 Care</button><button class="on">💪 Body</button></div>
+  <div class="seg mseg"><button data-act="careGo" data-f="nutrition">🍽️ Food</button><button data-act="careGo" data-f="routines">🧼 Routines</button><button class="on">💪 Body</button></div>
  <div class="bodyg">
   <div>
   <div class="card" id="wkCard">
-    <div class="cardhead"><h2>💪 Workout</h2><small id="wkStatus"></small></div>
-    <p class="sub" style="margin:2px 0 8px">Type the reps you did in each set (seconds for the plank). The faint numbers are last time: try to match or beat them.</p>
+    <div class="cardhead"><h2>💪 Workout <button type="button" class="qh" data-act="hint" data-k="wk" title="How this works">?</button></h2><small id="wkStatus"></small></div>
+    <p class="sub hint" data-k="wk" style="margin:2px 0 8px" hidden>Type the reps you did in each set (seconds for the plank). The faint numbers are last time: try to match or beat them.</p>
     <form id="wkForm">
       <div id="wkRows"></div>
       <div class="row" style="margin-top:10px;align-items:center">
@@ -1300,7 +1354,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
   </div>
   <div>
   <div class="card" id="protCard">
-    <div class="cardhead"><h2>🥚 Protein</h2><small id="protHead"></small></div>
+    <div class="cardhead"><h2>🥚 Protein <button type="button" class="qh" data-act="hint" data-k="prot" title="How this works">?</button></h2><small id="protHead"></small></div>
     <div id="protBody"></div>
     <details class="calest">
       <summary>Change the daily goal</summary>
@@ -1346,7 +1400,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
     </div>
     <label class="chk" style="margin-top:10px;white-space:normal"><input type="checkbox" id="nagMix"> Keep changing the to-do bar's color and spot, so it keeps catching your eye</label>
   </div>
-  <div class="card" data-sg="look">
+  <div class="card" data-sg="help">
     <h2>🖥️ Keep it on your desktop</h2>
     <ol class="steps">
       <li>Open this file in <b>Chrome</b> or <b>Edge</b>, and always use that same browser (your progress is saved inside it).</li>
@@ -2203,7 +2257,7 @@ async function bkInit(){
 // compressed and locked with AES-256-GCM, and only that locked copy is uploaded. Firebase can't read it.
 const FB_V = "12.6.0";
 // Settings that belong to one device, and old parts of the app that only stay on the PC: never uploaded
-const SYNC_LOCAL = ["dashLay","fileAsk","widget","setTab","careFocus","careSide","alarm","hyper","nagMix","theme","accent",
+const SYNC_LOCAL = ["lrTab","dashLay","fileAsk","widget","setTab","careFocus","careSide","alarm","hyper","nagMix","theme","accent",
   "shelves","items","qol","bf","bn","brainArchive","journal","journalBonus","ach","well","wellBonus"];
 const SK_BASE = KEY+".syncBase", SK_SNAP = KEY+".syncSnap", SK_DEV = KEY+".device", SK_BEFORE = KEY+".beforeSync";
 const TEST_HOST = location.hostname==="localhost" || location.hostname==="127.0.0.1";
@@ -2526,7 +2580,7 @@ function rState(r){
   }
   const last = rLast(r);
   if(last===t) return {k:"ok", txt:"Done today ✓", full:true};
-  if(!last) return {k:"due", txt:"Not tracked yet. Mark it next time (or 📅 if you did it recently)"};
+  if(!last) return {k:"due", txt:"Not tracked yet"};
   const days = daysBetween(last,t), left = r.every - days;
   const ago = days===1 ? "yesterday" : `${days} days ago`;
   if(left>0) return {k:"ok", txt:`Last done ${ago} · next in ${left} day${left>1?"s":""}`};
@@ -2584,23 +2638,13 @@ const WORKOUT_HOW = `
 let wkOpen = false;
 document.addEventListener("toggle", e => { if(e.target.id==="wkHow") wkOpen = e.target.open; }, true);
 function routineHtml(r){
-  const st = rState(r), t = today(), c = rCount(r,t);
-  const how = /morning workout/i.test(r.name) ? `<details class="wkhow" id="wkHow"${wkOpen ? " open" : ""}><summary>What to do (tap to open)</summary>${WORKOUT_HOW}</details>`
-    : /^it study/i.test(r.name) ? `<div class="wkhow"><button class="linkbtn" data-act="goto" data-tab="brain">Open today's plan in Skills →</button> <small class="sub">Logging an IT session there ticks this off.</small></div>` : "";
-  let dots = "";
-  if(isDaily(r) || isWeekly(r)){
-    const need = isDaily(r) ? r.times : 1;
-    dots = '<div class="dots" title="Last 7 days">';
-    for(let i=6;i>=0;i--){ const n = rCount(r, shiftDate(t,-i)); dots += `<i class="${n>=need?"on":n>0?"half":""}"></i>`; }
-    dots += "</div>";
-  }
-  const doBtn = st.full ? "" : `<button class="btn ${st.k==="ok"?"":"primary"}" data-act="rDo" data-id="${r.id}">${isDaily(r) && r.times>1 ? "+1" : "Done"}</button>`;
-  const undo = c>0 ? `<button class="x" data-act="rUndo" data-id="${r.id}" title="Undo today">↶</button>` : "";
-  const past = !isDaily(r) && !st.full ? `<button class="x" data-act="rPast" data-id="${r.id}" title="I did this on an earlier day">📅</button>` : "";
-  return `<div class="rt ${st.k}">
-    <div class="ic">${esc(r.icon)}</div>
-    <div class="grow"><b>${esc(r.name)}</b> <span class="tag">${schedLabel(r)}</span><small class="when">${st.txt}</small>${dots}</div>
-    <div class="acts">${past}${undo}${doBtn}<button class="x" data-act="rEdit" data-id="${r.id}" title="Change name, emoji or how often">✎</button><button class="x" data-act="delRoutine" data-id="${r.id}" title="Remove">×</button></div>${how}
+  const st = rState(r), c = rCount(r, today()), multi = isDaily(r) && r.times>1;
+  const act = st.full ? (c>0 ? "rUndo" : "") : "rDo";
+  const undo = c>0 && !st.full ? `<button class="x" data-act="rUndo" data-id="${r.id}" title="Undo one">↶</button>` : "";
+  const past = !isDaily(r) && !st.full ? `<button class="x ed" data-act="rPast" data-id="${r.id}" title="I did this on an earlier day">📅</button>` : "";
+  return `<div class="rr ${st.k}${st.full ? " full" : ""}">
+    <button type="button" class="rmain" data-act="${act}" data-id="${r.id}" title="${st.full ? (c>0 ? "Done today. Tap to undo" : "Done") : "Tap when done"}"><span class="ic">${esc(r.icon)}</span><span class="grow"><b>${esc(r.name)}</b><small>${st.txt}</small></span>${st.full ? `<span class="rck">✓</span>` : multi ? `<span class="rn2">${c}/${r.times}</span>` : ""}</button>
+    <div class="acts">${undo}${past}<button class="x ed" data-act="rEdit" data-id="${r.id}" title="Change name, emoji or how often">✎</button><button class="x ed" data-act="delRoutine" data-id="${r.id}" title="Remove">×</button></div>
   </div>`;
 }
 const RANK_K = {over:0,due:1,ok:2};
@@ -2650,9 +2694,8 @@ function renderRoutines(){
   const dueCount = periodic.concat(weekly).filter(r=>rState(r).k!=="ok").length;
   $("careCount").textContent = `${dDone}/${daily.length} daily done${dueCount?` · ${dueCount} due`:""}`;
   let h = "";
-  if(daily.length) h += `<div class="sectlabel">Every day</div>` + daily.map(routineHtml).join("");
-  if(weekly.length) h += `<div class="sectlabel">A few times a week</div>` + weekly.map(routineHtml).join("");
-  if(periodic.length) h += `<div class="sectlabel">On a schedule</div>` + periodic.map(routineHtml).join("");
+  const grp = (lbl, L) => L.length ? `<div class="sectlabel">${lbl}</div><div class="rrgrid">${L.map(routineHtml).join("")}</div>` : "";
+  h += grp("Every day", daily) + grp("A few times a week", weekly) + grp("On a schedule", periodic);
   $("routines").innerHTML = h || `<div class="empty">No routines yet. Add one below.</div>`;
   renderRCal();
 }
@@ -2794,8 +2837,8 @@ function renderBody(){
   $("protBody").innerHTML = `<div class="protnow"><b>${p}</b> <span class="sub">of ${goal} g today</span></div>
     <div class="bar protbar"><i style="width:${Math.round(pct*100)}%"></i></div>
     <div class="protweek">${days.map(d=>{ const v = dayProtein(d); return `<div title="${niceDate(d)}: ${v} g"><i style="height:${Math.round(Math.min(1, v/goal)*100)}%" class="${v>=goal ? "hit" : ""}"></i><small>${d===t ? "Today" : new Date(d+"T12:00").toLocaleDateString(undefined,{weekday:"short"})}</small></div>`; }).join("")}</div>
-    <p class="sub" style="margin:8px 0 4px">${p>=goal ? "✓ Goal hit today." : `${goal-p} g to go. Easy adds: a glass of milk (~8 g), Greek yogurt (~15–20 g), 2 more eggs (~12 g), a chicken breast (~35 g), a protein shake (~25 g).`}</p>
-    <small class="sub">Protein comes from the <b>protein g</b> box when you log food in Care. Your usual breakfast is about 55 g, and it's saved in My foods with that filled in.</small>`;
+    <p class="sub" style="margin:8px 0 4px">${p>=goal ? "✓ Goal hit today." : `${goal-p} g to go.`}</p>
+    <p class="sub hint" data-k="prot"${hintOpen.has("prot") ? "" : " hidden"}>Easy adds: a glass of milk (~8 g), Greek yogurt (~15–20 g), 2 more eggs (~12 g), a chicken breast (~35 g), a protein shake (~25 g). Protein comes from the <b>protein g</b> box when you log food in Care. Your usual breakfast is about 55 g, and it's saved in My foods with that filled in.</p>`;
 }
 $("wkForm").addEventListener("submit", e=>{
   e.preventDefault(); const f = e.target.elements, d = f.date.value || today(), sets = {};
@@ -3094,11 +3137,14 @@ function putRow(h){
   const tip = !state && PUT_TIP[h.why] ? `<div class="tip">💡 ${PUT_TIP[h.why]}</div>` : "";
   const acts = state
     ? `<button class="x" data-act="putUndo" data-id="${h.id}" title="Put it back on the list">↶</button><button class="x" data-act="putDel" data-id="${h.id}" title="Delete for good">×</button>`
-    : `${stepBtn(h,"sm")}${h.step?`<button class="btn sm" data-act="putStep" data-id="${h.id}">✓ Did the step</button>`:""}
-       <button class="btn sm primary" data-act="putDone" data-id="${h.id}">✅ Done</button>
-       ${h.snooze && h.snooze>today()?`<button class="btn sm" data-act="putWake" data-id="${h.id}">Wake up</button>`:`<button class="btn sm" data-act="putShow" data-id="${h.id}" title="Show this one in the top bar">📌 Bar</button>`}
-       <button class="x" data-act="putEdit" data-id="${h.id}" title="Edit">✎</button>
-       <button class="x" data-act="putDrop" data-id="${h.id}" title="Let it go (not doing it)">🗑</button>`;
+    : `<button class="btn sm primary" data-act="putDone" data-id="${h.id}">✅ Done</button>
+       <details class="more"><summary class="x" title="More">⋯</summary><div class="menu">
+         ${h.step?`<button data-act="putStep" data-id="${h.id}">✓ Did the step</button>`:""}
+         ${h.link?`<a href="${esc(h.link)}" target="_blank" rel="noopener noreferrer">↗ Open link</a>`:""}
+         ${h.snooze && h.snooze>today()?`<button data-act="putWake" data-id="${h.id}">⏰ Wake up</button>`:`<button data-act="putShow" data-id="${h.id}">📌 Show in the top bar</button>`}
+         <button data-act="putEdit" data-id="${h.id}">✎ Edit</button>
+         <button data-act="putDrop" data-id="${h.id}">🗑 Let it go</button>
+       </div></details>`;
   return `<div class="hd ${state} ${!state && age>=30?"old":""}"><span class="ic">${esc(h.icon||PUT_KIND[h.kind]||"🪨")}</span>
     <div class="grow"><b>${esc(h.text)}</b><div class="meta">${meta}</div>
       ${!state && h.step?`<div class="step">👉 ${esc(h.step)}</div>`:""}${tip}</div>
@@ -3563,6 +3609,13 @@ $("lrForm").addEventListener("submit", e=>{
 });
 // Dashboard panel: this week's practice
 function skDashHtml(){
+  const all = lrSessions(), t = today(), wk = all.filter(e=>e.date>=weekStart(t) && e.date<=t), last = all[0], fd = fcDue().length;
+  const where = last ? (last.sec ? `section ${esc(last.sec)}` : esc(skOf(last.skill).name)) : "";
+  return `<div class="skline"><div class="grow"><b>${fd ? `🃏 ${fd} card${fd>1?"s":""} due` : "🃏 No cards due"}</b>
+    <small>${last ? `Last studied ${where}, ${lrAgo(last.date)}` : "No sessions logged yet"}${wk.length ? ` · ${wk.length} this week` : ""}</small></div>
+    <button class="btn sm primary" data-act="skStudy">▶ Study</button></div>`;
+}
+function skDashHtmlOld(){
   const L = LR(); if(!L.skills.length) return `<p class="sub" style="margin:0">Add a skill you're learning, like Networking or Cybersecurity, and log what you practise each day.</p>`;
   const t = today(), ws = weekStart(t), all = lrSessions(), wk = all.filter(e=>e.date>=ws && e.date<=t);
   const per = L.skills.map(s=>({s, n:wk.filter(e=>e.skill===s.id).length})).filter(x=>x.n).sort((a,b)=>b.n-a.n);
@@ -3658,7 +3711,7 @@ function putFillForm(h){
   const f = $("putForm").elements; putEditing = h ? h.id : null;
   f.text.value = h ? h.text : ""; f.kind.value = h ? h.kind : "task"; f.why.value = h ? (h.why||"none") : "none";
   f.step.value = h ? (h.step||"") : ""; f.link.value = h ? (h.link||"") : "";
-  $("putSubmit").textContent = h ? "Save changes" : "Add to the list"; $("putCancel").hidden = !h;
+  $("putSubmit").textContent = h ? "Save changes" : "Add"; $("putCancel").hidden = !h;
 }
 
 /* ---------- old quality of life tab: kept only so very old saves still upgrade ---------- */
@@ -3696,11 +3749,11 @@ function calTgtLabel(){
   $("calTgtSum").textContent = t ? `🎯 Daily target: ${fmtK(t)} kcal (${S.cal.mode==="min" ? "reach it" : "stay under"})` : "🎯 Set a daily calorie target";
 }
 /* ---------- care overview + focus ---------- */
-const CARE_F = {all:"Everything", nutrition:"🍎 Nutrition", routines:"🧼 Routines"};
+const CARE_F = {nutrition:"🍽️ Food", routines:"🧼 Routines"};
 function careApply(){
-  const sec = $("tab-care"), f = CARE_F[S.careFocus] ? S.careFocus : "all";
+  const sec = $("tab-care"), f = CARE_F[S.careFocus] ? S.careFocus : "nutrition";
   sec.dataset.focus = f;
-  $("careFocus").innerHTML = Object.entries(CARE_F).map(([k,v])=>`<button class="${f===k?"on":""}" data-act="careFocus" data-f="${k}" role="tab" aria-selected="${f===k}">${v}</button>`).join("");
+  document.querySelectorAll("#careSeg button[data-f]").forEach(b=>b.classList.toggle("on", b.dataset.f===f));
   document.querySelectorAll("#careTiles .ctile").forEach(el=>el.classList.toggle("on", el.dataset.f===f));
 }
 // A day's care score, 0 to 1: the average of nutrition and routines
@@ -4252,7 +4305,7 @@ function renderStats(){
     ["🔍","Weekly reviews", Object.keys(S.reviews).length, ""]];
   $("statGrid").innerHTML = all.map(([ic,l,v,sub])=>kpi(ic,l,v,sub)).join("");
   // the dashboard shows the same numbers, for the period picked in Settings → Stats
-  $("dKpi").innerHTML = $("stKpi").innerHTML; $("dKpiLbl").textContent = {week:"This week", month:"Last 30 days", year:"Last year", all:"All time"}[stPeriod] || "This week";
+  { const ks = [...$("stKpi").children]; $("dKpi").innerHTML = [0,1,2,5].map(i=>ks[i] ? ks[i].outerHTML : "").join(""); } $("dKpiLbl").textContent = {week:"This week", month:"Last 30 days", year:"Last year", all:"All time"}[stPeriod] || "This week";
 }
 function renderProgress(){
   const t = today();
@@ -4392,9 +4445,11 @@ function renderDash(){
       <div class="mini" style="border:0"><span>🔥</span><div class="grow"><b>${fmtK(e)}</b> ${tg?`/ ${fmtK(tg)} kcal eaten`:"kcal"}</div>${calLeftHtml(e, tg)}</div>${bar(e,tg)}</div>`; }
   $("dBrush").innerHTML = legendHtml();
   $("dDay").innerHTML = dayGrid(t);
-  $("dTimer").innerHTML = `<div class="sectlabel">Latest</div>` + storyHtml(t, 3);
   $("dSum").innerHTML = sumHtml(t) + dayHintHtml(t);
   $("dBrain").innerHTML = skDashHtml();
+  { const f = latestFocus(), wk = weekStart(t);
+    $("dFocus").textContent = f ? `🎯 Focus this week: ${f}` : "";
+    $("dReview").innerHTML = new Date().getDay()===0 && !S.reviews[wk] ? `<button class="dreview" data-act="reviewGo"><span class="qi">🔍</span><div class="grow"><b>Weekly review</b><small>It's Sunday: 2 minutes to look back and pick one focus</small></div><span class="qa">›</span></button>` : ""; }
   { const l = putAwake();
     $("dTodo").innerHTML = l.length ? l.slice(0,6).map(x=>`<div class="mini"><span>${esc(x.icon||PUT_KIND[x.kind]||"🪨")}</span><div class="grow">${esc(x.text)}${x.step ? `<small style="display:block;color:var(--muted)">👉 ${esc(x.step)}</small>` : ""}</div><button class="btn sm primary" data-act="putDone" data-id="${x.id}">Done</button></div>`).join("") + (l.length>6 ? `<small class="sub">+${l.length-6} more</small>` : "")
       : `<p class="sub" style="margin:0">✨ Nothing on your list.</p>`; }
@@ -4429,11 +4484,19 @@ function applyTheme(){
   $("nagMix").checked = S.nagMix!==false;
   document.body.classList.toggle("widget", !!S.widget);
 }
+// Skills page sub-tabs (kept per device)
+const LR_T = {study:"🖥️ Study", cards:"🃏 Cards", log:"📝 Log", map:"🗺️ Exam map"};
+function lrTabApply(){
+  const t = LR_T[S.lrTab] ? S.lrTab : "study", fd = fcDue().length;
+  $("tab-brain").dataset.lt = t;
+  $("lrTabs").innerHTML = Object.entries(LR_T).map(([k,v])=>`<button class="${k===t?"on":""}" data-act="lrTab" data-t="${k}">${v}${k==="cards" && fd ? ` · ${fd}` : ""}</button>`).join("");
+}
+const lrTabGo = t => { S.lrTab = t; save(); lrTabApply(); };
 function renderAll(){
   TT = timeTotals();
   renderHeader(); renderRoutines(); renderNutri(); renderWeight(); renderBody(); calTgtLabel(); renderCareTop();
   renderBrain(); renderTime(); renderPut(); renderProgress(); renderReview(); renderLog();
-  applyTheme(); renderDash(); renderAlarm(); renderSetTabs(); renderYou();
+  applyTheme(); renderDash(); renderAlarm(); renderSetTabs(); renderYou(); lrTabApply();
 }
 
 /* ---------- tabs ---------- */
@@ -4442,7 +4505,7 @@ function showTab(name){
   if(!$("tab-"+name)) name = "dash";
   if(S.widget && name!=="dash"){ S.widget = false; document.body.classList.remove("widget"); save(); }
   document.querySelectorAll("section").forEach(s=>s.classList.toggle("on", s.id==="tab-"+name));
-  document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on", b.dataset.tab===name));
+  document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on", b.dataset.tab===(name==="body" ? "care" : name)));
   try{ localStorage.setItem(KEY+".tab", name); }catch(e){}
   document.body.dataset.tab = name;
   const bn = {dash:"dash", time:"time", cards:"cards", care:"care", body:"care"}[name] || "you";
@@ -4459,6 +4522,10 @@ $("bnav").addEventListener("click", e=>{ const b = e.target.closest("button[data
 // S.dashLay = {order:[widgets], hide:[widgets]}, kept per device (dashLay is in SYNC_LOCAL).
 const DASH_ALL = ["time","today","todo","food","skills","glance","cal","heat","weight"];
 let dashEdit = false, dashDrag = null;
+const hintOpen = new Set();
+document.addEventListener("click", e=>{
+  document.querySelectorAll("details.more[open]").forEach(d=>{ if(!d.contains(e.target) || e.target.closest(".menu")) d.open = false; });
+}, true);
 function dashLay(){
   const L = S.dashLay || {};
   let order = Array.isArray(L.order) ? L.order : Array.isArray(L.rows) ? L.rows.flatMap(r=>(r.items||[]).map(it=>it.p)) : [];
@@ -4564,7 +4631,8 @@ document.addEventListener("click", e=>{
     case "sbNext": sbNext(); break;
     case "setGo": S.setTab = b.dataset.g; save(); renderSetTabs(); showTab("settings"); window.scrollTo(0,0); break;
     case "setTab": S.setTab = SET_G[b.dataset.g] ? b.dataset.g : "look"; save(); renderSetTabs(); break;
-    case "careFocus": S.careFocus = CARE_F[b.dataset.f] ? b.dataset.f : "all"; save(); renderCareTop(); break;
+    case "careFocus": S.careFocus = CARE_F[b.dataset.f] ? b.dataset.f : "nutrition"; save(); renderCareTop(); break;
+    case "careGo": S.careFocus = CARE_F[b.dataset.f] ? b.dataset.f : "nutrition"; save(); showTab("care"); careApply(); window.scrollTo(0,0); break;
     case "cdDay": cdSel = b.dataset.d; renderCareDays(); break;
     case "rcPrev": case "rcNext": { const [y, m] = (rcMon || today().slice(0,7)).split("-").map(Number); rcMon = fmtDate(new Date(y, m-1 + (b.dataset.act==="rcNext"?1:-1), 1)).slice(0,7); renderRCal(); break; }
     case "cdMode": cdMode = b.dataset.f==="rou" ? "rou" : "cal"; renderCareYear(); break;
@@ -4572,7 +4640,8 @@ document.addEventListener("click", e=>{
     case "cdYearNext": if(cdYear < +today().slice(0,4)){ cdYear++; renderCareYear(); } break;
     case "rUndo": rUndo(id); break;
     case "rPast": rPast(id); break;
-    case "rEdit": { const r = S.routines.find(x=>x.id===id); if(r){ rFill(r); $("routineForm").scrollIntoView({behavior:"smooth", block:"center"}); $("routineForm").elements.sched.focus(); } break; }
+    case "rEditMode": { const c = $("routCard"), on = !c.classList.contains("editing"); c.classList.toggle("editing", on); $("rEditBtn").textContent = on ? "✓ Done" : "✎ Edit"; $("rEditBtn").classList.toggle("primary", on); break; }
+    case "rEdit": { const r = S.routines.find(x=>x.id===id); if(r){ $("rAddBox").open = true; rFill(r); $("routineForm").scrollIntoView({behavior:"smooth", block:"center"}); $("routineForm").elements.sched.focus(); } break; }
     case "rEditCancel": rFill(null); break;
     case "delRoutine": { const r = S.routines.find(x=>x.id===id); if(r && confirm(`Remove "${r.name}"?`)){ S.routines = S.routines.filter(x=>x.id!==id); delete S.rdone[id]; save(); renderAll(); } break; }
     case "nPlus": nStep(id, 1); break;
@@ -4599,7 +4668,7 @@ document.addEventListener("click", e=>{
     case "putDel": { const h = putFind(id); if(h && confirm(`Delete "${h.text}" for good?`)){ S.hurdles = S.hurdles.filter(x=>x.id!==id); save(); renderAll(); } break; }
     case "putWake": { const h = putFind(id); if(h){ h.snooze = null; nagPick = id; save(); renderAll(); } break; }
     case "putShow": nagPick = id; renderNag(); window.scrollTo({top:0, behavior:"smooth"}); break;
-    case "putEdit": { const h = putFind(id); if(h){ putFillForm(h); $("putForm").scrollIntoView({block:"center", behavior:"smooth"}); $("putForm").elements.text.focus(); } break; }
+    case "putEdit": { const h = putFind(id); if(h){ putFillForm(h); $("putMore").open = !!(h.step || h.link || (h.why && h.why!=="none")); $("putForm").scrollIntoView({block:"center", behavior:"smooth"}); $("putForm").elements.text.focus(); } break; }
     case "nagNext": { const l = putAwake(); const i = l.findIndex(h=>h.id===nagPick); nagPick = l[(i+1)%l.length].id; renderNag(); break; }
     case "calPrev": calDay = shiftDate(calDay||today(), -1); $("calMeal").dataset.touched = ""; renderCal(); break;
     case "calNext": if((calDay||today())<today()){ calDay = shiftDate(calDay, 1); $("calMeal").dataset.touched = ""; renderCal(); } break;
@@ -4660,7 +4729,11 @@ document.addEventListener("click", e=>{
       L.skills = L.skills.filter(x=>x!==s); L.log = L.log.filter(e=>e.skill!==s.id);
       $("skDlg").close(); save(); renderAll(); break; }
     case "lrCancel": lrFill(null); break;
-    case "lrEdit": { const e = LR().log.find(x=>x.id===id); if(e){ lrFill(e); $("lrForm").scrollIntoView({behavior:"smooth", block:"center"}); } break; }
+    case "lrTab": lrTabGo(b.dataset.t); break;
+    case "skStudy": if(isPhone()) showTab("cards"); else { lrTabGo("cards"); showTab("brain"); } window.scrollTo(0,0); break;
+    case "reviewGo": S.setTab = "stats"; save(); renderSetTabs(); showTab("settings"); setTimeout(()=>$("reviewCard").scrollIntoView({behavior:"smooth", block:"start"}), 50); break;
+    case "hint": { const k = b.dataset.k; if(hintOpen.has(k)) hintOpen.delete(k); else hintOpen.add(k); document.querySelectorAll(`.hint[data-k="${k}"]`).forEach(p=>p.hidden = !hintOpen.has(k)); break; }
+    case "lrEdit": { const e = LR().log.find(x=>x.id===id); if(e){ lrTabGo("study"); lrFill(e); $("lrForm").scrollIntoView({behavior:"smooth", block:"center"}); } break; }
     case "lrDel": { const L = LR(), e = L.log.find(x=>x.id===id); if(e && confirm(`Delete the session from ${niceDate(e.date)}?`)){ L.log = L.log.filter(x=>x!==e); if(lrEditing===id) lrFill(null); save(); renderAll(); } break; }
     case "lrMore": lrAll = true; renderBrain(); break;
     case "lrFilt": lrFilt = lrFilt===id ? "" : id; lrAll = false; renderBrain(); break;
@@ -4674,7 +4747,7 @@ document.addEventListener("click", e=>{
     case "fcMiss": fcAnswer(false); break;
     case "fcPracticeAll": fcStart(true); renderCards(); break;
     case "fcStop": fcQ = null; fcPractice = false; fcRound = {got:0, miss:0}; renderCards(); break;
-    case "fcEdit": { const c = fcOf(id); if(c){ fcFill(c); $("fcAddBox").open = true; $("fcForm").scrollIntoView({behavior:"smooth", block:"center"}); } break; }
+    case "fcEdit": { const c = fcOf(id); if(c){ lrTabGo("cards"); fcFill(c); $("fcAddBox").open = true; $("fcForm").scrollIntoView({behavior:"smooth", block:"center"}); } break; }
     case "fcCancel": fcFill(null); break;
     case "fcDel": { const c = fcOf(id); if(c && confirm("Delete this card?\n\n" + c.q)){ LR().cards = lrCards().filter(x=>x!==c); if(fcEditing===id) fcFill(null); save(); renderBrain(); } break; }
     case "lrPaste": { const L = LR(); $("lrPasteBox").hidden = false; $("lrPasteIn").value = L.summary ? L.summary.text : ""; $("lrPasteIn").focus(); break; }
