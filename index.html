@@ -516,6 +516,19 @@ ol.steps li{margin:4px 0}
 /* dialogs */
 dialog{border:1px solid var(--line);border-radius:16px;padding:18px;background:var(--panel);color:var(--text);width:min(94vw,480px);box-shadow:0 10px 40px rgba(0,0,0,.4)}
 dialog::backdrop{background:rgba(10,5,25,.55)}
+.tdtop{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(16px + env(safe-area-inset-top)) 18px 10px}
+.tdtop h2{font-size:22px;margin:0}
+.tdx{border:0;background:var(--panel2);color:var(--text);width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;flex:none}
+.tdlist{flex:1;overflow-y:auto;padding:4px 16px}
+.tdrow{display:flex;gap:12px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}
+.tdrow .ic{font-size:24px;flex:none}
+.tdrow .grow{flex:1;min-width:0}
+.tdrow b{display:block;font-size:16px}
+.tdrow small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.tdacts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center}
+.tdacts select{width:auto;display:inline-block;margin:0;padding:6px 8px;font-size:13px}
+.tdfoot{padding:10px 16px calc(14px + env(safe-area-inset-bottom))}
+.tdfoot .btn{width:100%;padding:15px;font-size:16px;border-radius:14px}
 dialog h2{margin:0 0 4px;font-size:18px}
 dialog label{display:block;font-size:13px;color:var(--muted);margin-top:10px}
 dialog input,dialog select,dialog textarea{display:block;width:100%;margin-top:3px;padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:var(--text)}
@@ -713,7 +726,12 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
   header.top{padding:10px 0}
   header.top .brand{font-size:18px}
   .wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
-  body:not([data-tab="dash"]) #nagBar, body:not([data-tab="dash"]) #fileBar{display:none!important}
+  #nagBar, body:not([data-tab="dash"]) #fileBar{display:none!important}
+  /* Time: just the day, no intro text or color key */
+  #tab-time .core > p.sub, #tBrush{display:none}
+  /* the to-do list takes the whole screen */
+  #todoDlg{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border:0;border-radius:0;padding:0;background:var(--bg)}
+  #todoDlg[open]{display:flex;flex-direction:column}
   section{padding-top:12px}
   .toasts{bottom:calc(76px + env(safe-area-inset-bottom))}
   .bnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:40;background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
@@ -1398,6 +1416,13 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 </dialog>
 
 
+
+<!-- phone: the whole to-do list, full screen, on launch and every 10 minutes -->
+<dialog id="todoDlg" aria-label="Your to-do list">
+  <div class="tdtop"><h2 id="tdTitle">📌 To do</h2><button class="tdx" data-act="tdClose" aria-label="Close">✕</button></div>
+  <div class="tdlist" id="tdList"></div>
+  <div class="tdfoot"><button class="btn primary" data-act="tdClose">Got it</button></div>
+</dialog>
 
 <!-- study break: 5 flashcards before filling in the half-hour -->
 <dialog id="sbDlg">
@@ -2903,6 +2928,7 @@ function stepBtn(h, cls){
 // New look for the to-do bar: a color, spot and entrance, each different from last time
 const NV = {c:9, f:7, p:6, a:3}, nvLast = {};
 function nagRoll(){
+  if(Date.now() - tdLast > 9*60*1000) todoShow();
   const bar = $("nagBar"); bar.className = "nag"; document.body.classList.remove("nagfix");
   if(S.nagMix===false) return;
   const pick = k => { let v; do v = Math.floor(Math.random()*NV[k]); while(v===nvLast[k]); return nvLast[k] = v; };
@@ -2911,7 +2937,31 @@ function nagRoll(){
   bar.classList.add("nv-c"+c, "nv-f"+f, "nv-p"+p, "nv-a"+a);
   if(p>=2 && p<=4) document.body.classList.add("nagfix");
 }
+// Phone: instead of the bar, the whole to-do list fills the screen when the app opens and again every
+// 10 minutes (the same timer that used to reshuffle the bar). Tap ✕, "Got it" or outside to close it.
+const isPhone = () => matchMedia("(max-width:700px)").matches;
+let tdLast = 0;
+function renderTodoDlg(){
+  const d = $("todoDlg"); if(!d || !d.open) return;
+  const list = putAwake();
+  if(!list.length){ d.close(); toast("✨ To-do list clear."); return; }
+  $("tdTitle").textContent = `📌 To do · ${list.length}`;
+  $("tdList").innerHTML = list.map(h=>`<div class="tdrow"><span class="ic">${esc(h.icon||PUT_KIND[h.kind]||"🪨")}</span>
+    <div class="grow"><b>${esc(h.text)}</b><small>${ageTxt(putAge(h))}</small>${h.step ? `<small>👉 ${esc(h.step)}</small>` : ""}
+      <div class="tdacts">
+        <button class="btn sm primary" data-act="putDone" data-id="${h.id}">✅ Done</button>
+        ${h.step ? `<button class="btn sm" data-act="putStep" data-id="${h.id}">✓ Did the step</button>` : ""}
+        <select data-snooze="${h.id}" aria-label="Snooze"><option value="">💤 Snooze…</option><option value="1">until tomorrow</option><option value="3">3 days</option><option value="7">a week</option><option value="30">a month</option></select>
+      </div></div></div>`).join("");
+}
+function todoShow(){
+  const d = $("todoDlg");
+  if(!d || !isPhone() || d.open || document.querySelector("dialog[open]") || !putAwake().length) return;
+  const a = document.activeElement; if(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return;   // not while you're typing
+  tdLast = Date.now(); d.showModal(); renderTodoDlg(); $("tdList").scrollTop = 0;
+}
 function renderNag(){
+  renderTodoDlg();
   const bar = $("nagBar"), list = putAwake();
   if(!list.length){ bar.hidden = true; return; }
   let i = list.findIndex(h=>h.id===nagPick);
@@ -4235,6 +4285,7 @@ document.addEventListener("click", e=>{
   const id = b.dataset.id;
   switch(b.dataset.act){
     case "goto": showTab(b.dataset.tab); window.scrollTo(0,0); break;
+    case "tdClose": $("todoDlg").close(); break;
     case "fillLast": { const L = sbLast(); openBlk(L.d, L.i, L.i, false); break; }
     case "widget": setWidget(!S.widget); break;
     case "blkRepeat": {
@@ -4441,6 +4492,9 @@ $("blkForm").addEventListener("submit", e=>{ e.preventDefault(); saveBlk($("blkT
 $("blkText").addEventListener("keydown", e=>{ if(e.key==="Enter" && (e.ctrlKey || e.metaKey)){ e.preventDefault(); saveBlk($("blkText").value, dlgRate); } });
 $("blkDlg").addEventListener("close", ()=>{ dlgSel = null; });
 $("sbDlg").addEventListener("close", ()=>{ sb = null; });
+$("todoDlg").addEventListener("click", e=>{ if(e.target===$("todoDlg") || e.target.classList.contains("tdlist")) $("todoDlg").close(); });
+// coming back to the app after 10+ minutes counts as opening it
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden && Date.now() - tdLast > 10*60*1000) setTimeout(todoShow, 300); });
 $("rcMonBox").addEventListener("toggle", renderRCal);
 
 /* ---------- forms & inputs ---------- */
