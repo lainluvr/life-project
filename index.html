@@ -103,9 +103,16 @@ details summary{cursor:pointer;color:var(--muted);margin-top:8px}
 .panel h3{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:6px}
 .panel h3 .linkbtn{font-size:12px;text-transform:none;letter-spacing:0}
 .core{background:radial-gradient(130% 150% at 0% 0%,color-mix(in srgb,var(--accent) 24%,var(--panel)) 0%,var(--panel) 62%);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
-/* panel sizes: S = one column, M = two, L = the whole row */
-.dash .panel[data-size="l"]{grid-column:1/-1}
-@media (min-width:701px){ .dash .panel[data-size="m"]{grid-column:span 2} }
+/* widgets: size set by dragging the corner grip in Edit layout */
+.dash .panel{position:relative}
+.dash .panel.fixedh{overflow:auto}
+.pgrip{display:none}
+body.dashedit .pgrip{display:block;position:absolute;right:2px;bottom:2px;width:22px;height:22px;cursor:nwse-resize;touch-action:none;border-radius:0 0 12px 0;
+  background:linear-gradient(135deg,transparent 50%,var(--accent) 50%,var(--accent) 60%,transparent 60%,transparent 70%,var(--accent) 70%,var(--accent) 80%,transparent 80%)}
+.dash .panel.resizing{outline-style:solid}
+.wttick{stroke:var(--line);stroke-width:1.5} .wttick.on{stroke:var(--accent)}
+.wtchart line.amseg{stroke:var(--accent);stroke-width:2}
+.wtrow.wtmiss{color:var(--muted);font-style:italic}
 .ptool{display:none}
 body.dashedit .ptool{display:flex;gap:6px;align-items:center;margin:-4px 0 10px;padding:6px;border-radius:10px;background:var(--tint2)}
 .ptool button, .ptool .pdrag{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:8px;padding:6px 10px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
@@ -879,24 +886,30 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
     </div>
 
     <div class="panel" data-pid="today">
-      <h3><span>🌤️ Today</span><small id="dDueCount"></small></h3>
+      <h3><span>🧼 Routines</span><small id="dDueCount"></small></h3>
       <div id="dFocus"></div>
-      <div class="sectlabel mhide" style="margin-top:4px">Care this week <button class="linkbtn" data-act="goto" data-tab="care" style="font-size:11px;margin-left:4px">details</button></div>
-      <div class="cwrow mhide"><span title="Calories">🔥</span><div class="cweek" id="dCareCal"></div></div>
-      <div class="cwrow mhide"><span title="Routines">🧼</span><div class="cweek" id="dCareRou"></div></div>
-      <div class="sectlabel">Routines due</div>
       <div id="dDue"></div>
+      <div class="cwrow"><span title="Routines this week">📅</span><div class="cweek" id="dCareRou"></div></div>
     </div>
 
     <div class="panel" data-pid="food">
-      <h3><span>🔥 Food &amp; water</span><button class="linkbtn" data-act="goto" data-tab="care">open</button></h3>
+      <h3><span>🍽️ Food today</span><button class="linkbtn" data-act="goto" data-tab="care">open</button></h3>
       <div id="dCal"></div>
       <form id="dCalForm" class="dcalform">
         <input name="kcal" type="number" min="0" max="9999" placeholder="kcal" required aria-label="Calories">
         <input name="text" placeholder="what (optional)" maxlength="100" aria-label="Food">
         <button class="btn sm primary">Log</button>
       </form>
-      <div id="dNutri" style="margin-top:8px"></div>
+    </div>
+
+    <div class="panel" data-pid="water">
+      <h3><span>💧 Water</span><button class="linkbtn" data-act="goto" data-tab="care">open</button></h3>
+      <div id="dNutri"></div>
+    </div>
+
+    <div class="panel" data-pid="todo">
+      <h3><span>✅ To do</span><button class="linkbtn" data-act="goto" data-tab="putoff">open</button></h3>
+      <div id="dTodo"></div>
     </div>
 
     <div class="panel" data-pid="skills">
@@ -2682,19 +2695,26 @@ function renderWeight(){
     const Wd = 400, H = 150, Lm = 34, top = 10, bot = 20, vs = pts.map(p=>p[1]);
     let lo = Math.min(...vs), hi = Math.max(...vs); if(hi-lo<4){ const m = (hi+lo)/2; lo = m-2; hi = m+2; }
     const X = i => Lm + (Wd-Lm-8)*i/29, Y = v => top + (hi-v)/(hi-lo)*(H-top-bot);
-    const line = k => { const p = pts.filter(q=>q[2]===k).sort((a,b)=>a[0]-b[0]); return p.length>1 ? `<polyline points="${p.map(q=>`${X(q[0]).toFixed(1)},${Y(q[1]).toFixed(1)}`).join(" ")}" class="${k}"/>` : ""; };
+    // solid between back-to-back days, dashed where days were skipped, so the gaps show
+    const line = k => { const p = pts.filter(q=>q[2]===k).sort((a,b)=>a[0]-b[0]); let o = "";
+      for(let j=1;j<p.length;j++){ const a = p[j-1], b = p[j]; o += `<line x1="${X(a[0]).toFixed(1)}" y1="${Y(a[1]).toFixed(1)}" x2="${X(b[0]).toFixed(1)}" y2="${Y(b[1]).toFixed(1)}" class="${k}seg"${b[0]-a[0]>1 ? ' stroke-dasharray="4 4" opacity=".55"' : ""}/>`; }
+      return o; };
+    const logged = new Set(pts.filter(q=>q[2]==="am").map(q=>q[0]));
+    const ticks = ds.map((x,i)=>`<line x1="${X(i).toFixed(1)}" x2="${X(i).toFixed(1)}" y1="${H-bot+2}" y2="${H-bot+(logged.has(i)?7:4)}" class="wttick${logged.has(i)?" on":""}"><title>${niceDate(x)}${logged.has(i)?"":": not logged"}</title></line>`).join("");
     chart = `<svg viewBox="0 0 ${Wd} ${H}" class="wtchart" role="img" aria-label="Weight over the last 30 days">`
       + [hi, (hi+lo)/2, lo].map(v=>`<line x1="${Lm}" x2="${Wd}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" class="grid"/><text x="${Lm-6}" y="${(Y(v)+3).toFixed(1)}" text-anchor="end">${Math.round(v)}</text>`).join("")
-      + line("am")
+      + ticks + line("am")
       + pts.map(([i,v,k])=>`<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${k==="am"?3.5:3}" class="${k}"><title>${niceDate(ds[i])}: ${k==="am" ? "morning" : "starting check"} ${wtF(v)} lb</title></circle>`).join("")
       + `<text x="${Lm}" y="${H-4}">${niceDate(from).replace(/, \d{4}$/,"")}</text><text x="${Wd}" y="${H-4}" text-anchor="end">today</text></svg>`
-      + `<div class="ksum wtkey"><span><i class="am"></i>morning</span>${si>=0 ? `<span><i class="start"></i>first check</span>` : ""}</div>`;
+      + `<div class="ksum wtkey"><span><i class="am"></i>morning</span>${si>=0 ? `<span><i class="start"></i>first check</span>` : ""}<span>┆ dashed = days not logged</span></div>`;
   }
-  const recent = days.filter(x=>typeof L[x].am==="number").slice(-7).reverse();
+  const firstAm = days.find(x=>typeof L[x].am==="number"), rFrom = firstAm && firstAm > shiftDate(t,-9) ? firstAm : shiftDate(t,-9);
+  const recent = firstAm ? dRange(rFrom, t).reverse() : [];
   $("wtBody").innerHTML = `<div class="wtstats">${stat(a7!==null ? wtF(a7)+" lb" : "—", "7-day morning avg")}${stat(rate!==null ? wtSign(rate)+" lb" : "—", "vs the week before")}${stat(since!==null ? wtSign(since)+" lb" : st ? wtF(st.v)+" lb" : "—", st ? `${since!==null ? "since" : "first check,"} ${niceDate(st.date).replace(/, \d{4}$/,"")}` : "since you started")}</div>
     <p class="sub" style="margin:4px 0 8px">${msg}</p>${chart}
-    ${recent.length ? `<div class="sectlabel">Recent</div>` + recent.map(x=>{ const e = L[x];
-      return `<div class="wtrow"><span>${x===t ? "Today" : niceDate(x).replace(/, \d{4}$/,"")}</span><span>${wtF(e.am)} lb</span><button class="x" data-act="wtDel" data-id="${x}" title="Delete this day">×</button></div>`; }).join("") : ""}
+    ${recent.length ? `<div class="sectlabel">Recent</div>` + recent.map(x=>{ const e = L[x], has = e && typeof e.am==="number", dl = x===t ? "Today" : niceDate(x).replace(/, \d{4}$/,"");
+      return has ? `<div class="wtrow"><span>${dl}</span><span>${wtF(e.am)} lb</span><button class="x" data-act="wtDel" data-id="${x}" title="Delete this day">×</button></div>`
+        : `<div class="wtrow wtmiss"><span>${dl}</span><span>not logged</span><span></span></div>`; }).join("") : ""}
     ${st ? `<small class="sub" style="display:block;margin-top:8px">First check: ${wtF(st.v)} lb on ${niceDate(st.date)}${st.note ? ` (${esc(st.note)})` : ""}.</small>` : ""}`;
 }
 // dashboard copy: the numbers and the chart from Body → Weight
@@ -4332,7 +4352,6 @@ function renderDash(){
   const wk = [6,5,4,3,2,1,0].map(k=>shiftDate(t,-k));
   const mini = (d, c, k) => { const [y,m,da] = d.split("-").map(Number);
     return `<button type="button" class="cday cd mini7 ${c.none?"none":""} ${d===t?"today open":""}" style="${c.st}" data-act="goto" data-tab="care" title="${niceDate(d)}: ${c.tt}"><small>${d===t ? "Today" : new Date(y,m-1,da).toLocaleDateString(undefined,{weekday:"narrow"})}</small><b>${c.b}</b></button>`; };
-  $("dCareCal").innerHTML = wk.map(d=>mini(d, calCell(d))).join("");
   $("dCareRou").innerHTML = wk.map(d=>mini(d, rouCell(d))).join("");
   $("dGreet").textContent = h<5 ? "Late night ✦" : h<12 ? "Good morning ☀️" : h<18 ? "Good afternoon 🌤️" : "Good evening 🌙";
   $("dDate").textContent = new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
@@ -4354,6 +4373,9 @@ function renderDash(){
   $("dTimer").innerHTML = `<div class="sectlabel">Latest</div>` + storyHtml(t, 3);
   $("dSum").innerHTML = sumHtml(t) + dayHintHtml(t);
   $("dBrain").innerHTML = skDashHtml();
+  { const l = putAwake();
+    $("dTodo").innerHTML = l.length ? l.slice(0,6).map(x=>`<div class="mini"><span>${esc(x.icon||PUT_KIND[x.kind]||"🪨")}</span><div class="grow">${esc(x.text)}${x.step ? `<small style="display:block;color:var(--muted)">👉 ${esc(x.step)}</small>` : ""}</div><button class="btn sm primary" data-act="putDone" data-id="${x.id}">Done</button></div>`).join("") + (l.length>6 ? `<small class="sub">+${l.length-6} more</small>` : "")
+      : `<p class="sub" style="margin:0">✨ Nothing on your list.</p>`; }
   renderDashWeight(); applyDash();
   { const L = sbLast(), b = blkOf(L.d, L.i), when = `${blockLabel(L.i)}–${endLabel(L.i)}`, fd = fcDue().length;
     $("dQuick").innerHTML = `<button class="qbtn${b ? "" : " go"}" data-act="fillLast"><span class="qi">${b ? "✅" : "⏳"}</span>
@@ -4412,23 +4434,29 @@ $("tabs").addEventListener("click", e=>{ const b = e.target.closest("button[data
 document.addEventListener("touchmove", e=>{ if(e.touches.length>1 && isPhone()) e.preventDefault(); }, {passive:false});
 $("bnav").addEventListener("click", e=>{ const b = e.target.closest("button[data-tab]"); if(b){ showTab(b.dataset.tab); window.scrollTo(0,0); } });
 // ---- dashboard layout: order, size (s/m/l) and hidden panels. Each device keeps its own (dashLay is in SYNC_LOCAL).
-const DASH_DEF = {order:["time","today","food","skills","glance","cal","heat","weight"], size:{time:"m", glance:"m"}};
+const DASH_DEF = {order:["time","today","todo","food","water","skills","glance","cal","heat","weight"], size:{time:{w:2}, glance:{w:2}}};
 let dashEdit = false, dashDrag = null;
 function dashLay(){
   const L = S.dashLay || {}, order = (L.order||[]).filter(p=>DASH_DEF.order.includes(p));
-  DASH_DEF.order.forEach(p=>{ if(!order.includes(p)) order.push(p); });
+  // a widget that's new since the layout was saved goes right after its neighbour from the default order
+  DASH_DEF.order.forEach((p,i)=>{ if(order.includes(p)) return; const prev = DASH_DEF.order.slice(0,i).reverse().find(x=>order.includes(x)); order.splice(prev ? order.indexOf(prev)+1 : 0, 0, p); });
   return {order, size:{...DASH_DEF.size, ...(L.size||{})}, hide:(L.hide||[]).filter(p=>DASH_DEF.order.includes(p))};
 }
 const dashGrid = () => document.querySelector("#tab-dash .dash");
 const dashName = el => (el.querySelector("h3 > span")||{}).textContent || el.dataset.pid;
+const dashCols = g => Math.max(1, getComputedStyle(g).gridTemplateColumns.split(" ").filter(Boolean).length);
+const dashSz = (v, cols) => { if(typeof v==="string") v = {w: v==="l" ? 99 : v==="m" ? 2 : 1}; v = v || {}; return {w: Math.max(1, Math.min(v.w||1, cols)), h: v.h || null}; };
 function applyDash(){
   const L = dashLay(), g = dashGrid(); if(!g) return;
+  const cols = dashCols(g);
   L.order.forEach(p=>{
     const el = g.querySelector(`[data-pid="${p}"]`); if(!el) return;
-    g.appendChild(el); el.dataset.size = L.size[p] || "s"; el.hidden = L.hide.includes(p);
+    g.appendChild(el); el.hidden = L.hide.includes(p);
+    const z = dashSz(L.size[p], cols); el.style.gridColumn = z.w>1 ? `span ${z.w}` : ""; el.style.height = z.h ? z.h + "px" : ""; el.classList.toggle("fixedh", !!z.h);
+    if(!el.querySelector(".pgrip")){ const gr = document.createElement("span"); gr.className = "pgrip"; gr.title = "Drag to resize · double-click to reset"; el.appendChild(gr); }
     let tb = el.querySelector(".ptool");
     if(!tb){ tb = document.createElement("div"); tb.className = "ptool"; el.prepend(tb); }
-    tb.innerHTML = `<span class="pdrag" title="Drag to move">⠿</span><button data-act="pMove" data-d="-1" title="Move earlier">${isPhone() ? "▲" : "◀"}</button><button data-act="pMove" data-d="1" title="Move later">${isPhone() ? "▼" : "▶"}</button><span class="grow"></span>${isPhone() ? "" : `<button data-act="pSize" title="Size: small, medium or large">${(L.size[p]||"s").toUpperCase()}</button>`}<button data-act="pHide" title="Hide this panel">Hide</button>`;
+    tb.innerHTML = `<span class="pdrag" title="Drag to move">⠿</span><button data-act="pMove" data-d="-1" title="Move earlier">${isPhone() ? "▲" : "◀"}</button><button data-act="pMove" data-d="1" title="Move later">${isPhone() ? "▼" : "▶"}</button><span class="grow"></span><button data-act="pHide" title="Hide this panel">Hide</button>`;
   });
   const hid = L.order.filter(p=>L.hide.includes(p));
   $("dashTray").innerHTML = `<small>${hid.length ? "Hidden panels, tap one to bring it back:" : "Hidden panels show up here."} <button class="linkbtn" data-act="dashReset">Reset layout</button></small>`
@@ -4443,7 +4471,6 @@ function dashAct(act, b){
     if(j<0 || j>=vis.length) return;
     const a = L.order.indexOf(p), c = L.order.indexOf(vis[j]); [L.order[a], L.order[c]] = [L.order[c], L.order[a]];
   }
-  else if(act==="pSize" && p) L.size[p] = {s:"m", m:"l", l:"s"}[L.size[p]||"s"];
   else if(act==="pHide" && p){ L.hide.push(p); toast(`Hid ${dashName(el)}. It's in the tray at the bottom if you want it back.`); }
   else if(act==="pShow") L.hide = L.hide.filter(x=>x!==b.dataset.p);
   else if(act==="dashReset"){ delete S.dashLay; save(); applyDash(); toast("Layout reset."); return; }
@@ -4466,6 +4493,33 @@ const dashDrop = ()=>{
   const L = dashLay(); L.order = [...dashGrid().querySelectorAll(":scope > [data-pid]")].map(x=>x.dataset.pid); dashSave(L);
 };
 document.addEventListener("pointerup", dashDrop);
+// resize: drag the corner grip. Width snaps to whole columns, height is free.
+let dashRs = null;
+document.addEventListener("pointerdown", e=>{
+  const gr = e.target.closest && e.target.closest(".pgrip"); if(!gr || !dashEdit) return;
+  e.preventDefault(); const el = gr.closest("[data-pid]"), g = dashGrid(), r = el.getBoundingClientRect(), cs = getComputedStyle(g);
+  const cols = dashCols(g), gap = parseFloat(cs.columnGap)||12, colW = (g.clientWidth - gap*(cols-1)) / cols;
+  dashRs = {el, x0:e.clientX, y0:e.clientY, w0:r.width, h0:r.height, cols, gap, colW, w:Math.round((r.width+gap)/(colW+gap)), h:null};
+  el.classList.add("resizing");
+});
+document.addEventListener("pointermove", e=>{
+  if(!dashRs) return; const R = dashRs;
+  R.w = Math.max(1, Math.min(R.cols, Math.round((R.w0 + e.clientX - R.x0 + R.gap) / (R.colW + R.gap))));
+  R.el.style.gridColumn = R.w>1 ? `span ${R.w}` : "";
+  if(Math.abs(e.clientY - R.y0) > 6){ R.h = Math.max(120, Math.round(R.h0 + e.clientY - R.y0)); R.el.style.height = R.h + "px"; R.el.classList.add("fixedh"); }
+});
+const dashRsEnd = ()=>{
+  if(!dashRs) return; const R = dashRs; dashRs = null; R.el.classList.remove("resizing");
+  const L = dashLay(), p = R.el.dataset.pid, old = dashSz(L.size[p], 99);
+  L.size[p] = {w:R.w, h: R.h || old.h || null}; dashSave(L);
+};
+document.addEventListener("pointerup", dashRsEnd);
+document.addEventListener("pointercancel", dashRsEnd);
+document.addEventListener("dblclick", e=>{
+  const gr = e.target.closest && e.target.closest(".pgrip"); if(!gr || !dashEdit) return;
+  const L = dashLay(); delete L.size[gr.closest("[data-pid]").dataset.pid]; dashSave(L); toast("Size reset.");
+});
+addEventListener("resize", ()=>{ if($("tab-dash").classList.contains("on")) applyDash(); });
 document.addEventListener("pointercancel", dashDrop);
 function setWidget(on){
   if(on) showTab("dash");
@@ -4485,8 +4539,8 @@ document.addEventListener("click", e=>{
     case "fillLast": { const L = sbLast(); openBlk(L.d, L.i, L.i, false); break; }
     case "widget": setWidget(!S.widget); break;
     case "dashEdit": dashEdit = !dashEdit; document.body.classList.toggle("dashedit", dashEdit); applyDash();
-      if(dashEdit) toast(isPhone() ? "Drag ⠿ or use ▲ ▼ to move a panel. Hide tucks one away. Tap Done when finished." : "Drag ⠿ or use ◀ ▶ to move a panel. S, M, L change its size. Tap Done when finished."); break;
-    case "pMove": case "pSize": case "pHide": case "pShow": case "dashReset": dashAct(b.dataset.act, b); break;
+      if(dashEdit) toast("Drag ⠿ to move a widget and the corner ◢ to resize it. Hide tucks one away. Tap Done when finished."); break;
+    case "pMove": case "pHide": case "pShow": case "dashReset": dashAct(b.dataset.act, b); break;
     case "blkRepeat": {
       const rg = repeatGap(); if(!rg) break; const t = today();
       for(let i=rg.from;i<=rg.to;i++) setBlock(t, i, {...rg.b}); mappedBonus(t);
