@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Life Login</title>
 <meta name="theme-color" content="#7867d6">
 <meta name="robots" content="noindex, nofollow">
@@ -224,7 +224,7 @@ body.widget .wrap{max-width:none;padding:12px}
 .story .tm{font-variant-numeric:tabular-nums;color:var(--muted);font-size:12px;white-space:nowrap;min-width:118px}
 .story .grow{min-width:0;overflow-wrap:anywhere;white-space:pre-line}
 .story small{color:var(--muted);white-space:nowrap}
-.rates{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:10px 0 4px}
+.rates{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 4px}
 .rd.big{width:18px;height:18px;border-radius:50%;margin-bottom:2px}
 .rate{border:2px solid var(--line);background:var(--panel2);color:var(--text);border-radius:12px;padding:8px 2px;cursor:pointer;font-size:13px;min-width:0;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px}
 .rate small{font-weight:400;font-size:10px;color:var(--muted);line-height:1.2;text-align:center}
@@ -722,6 +722,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 /* ===== phone layout: app-style bottom bar (Home, Time, Cards, Care, You) ===== */
 .bnav, #dQuick, .mback, .mseg{display:none}
 @media (max-width:700px){
+  html, body{overflow-x:hidden;overscroll-behavior:none;touch-action:pan-y}
+  input, textarea, select{font-size:16px!important}   /* 16px stops the phone zooming in when you tap a box */
   nav.tabs, header.top .stats, #widgetBtn, .mhide, #tab-dash .panel.core{display:none!important}
   header.top{padding:10px 0}
   header.top .brand{font-size:18px}
@@ -1116,7 +1118,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
   <div class="card core">
     <div class="cardhead"><h2>⏳ Your day in half-hours</h2>
       <span class="tight"><button class="btn sm" data-act="dayPrev" aria-label="Previous day">◀</button><b id="tDate" style="white-space:nowrap"></b><button class="btn sm" data-act="dayNext" aria-label="Next day">▶</button></span></div>
-    <p class="sub">Tap a block, or drag across several, then write a quick summary of what you did and pick one of five colors: green (productive), light green (fairly productive), yellow (neutral: sleep, meals, rest), orange (drifting) or red (dead time).
+    <p class="sub">Tap a block, or drag across several, then write a quick summary of what you did and pick green (productive), yellow (neutral) or red (dead time).
       It doesn't have to be live. Hours later, or the next morning, is fine. Dead time isn't "bad". It's data. <button class="linkbtn" data-act="setGo" data-g="remind" id="tAlarm"></button></p>
     <div id="tBrush"></div>
     <div id="tDay"></div>
@@ -1135,7 +1137,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
     <div id="greenTop"></div>
   </div>
   <div class="card">
-    <div class="cardhead"><h2>🔴 Dead and drifting time</h2><small id="deadSum"></small></div>
+    <div class="cardhead"><h2>🔴 Dead time</h2><small id="deadSum"></small></div>
     <div id="dead"></div>
   </div>
   </div>
@@ -1403,9 +1405,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
   <h2 style="margin:4px 0 8px">What did you do?</h2>
   <form id="blkForm">
     <textarea name="s" id="blkText" rows="3" placeholder="e.g. Studied for my exam, scrolled TikTok, ate dinner" maxlength="500" aria-label="Summary"></textarea>
-    <small class="sub">Enter starts a new line. Tap <b>Save</b> when you're done (or Ctrl+Enter on a keyboard).</small>
     <div class="rates" id="blkRates"></div>
-    <div id="blkChipsWrap"><div class="sectlabel">Recent, tap to use right away</div><div class="chips" id="blkChips"></div></div>
     <div class="row">
       <button class="btn primary">Save</button>
       <button type="button" class="btn" data-act="blkOne" id="blkOne" hidden>Only this half-hour</button>
@@ -1555,7 +1555,7 @@ function CAT_SEED(){
     C("🎮","Fun on purpose","life","#e3a92b","mental")
   ];
 }
-const DATA_V = 31;
+const DATA_V = 32;
 function defaults(){
   return {
     v:DATA_V, totalXp:0, maxLevel:1, best:0,
@@ -1931,6 +1931,12 @@ Quiz, 8 questions, about 5 right. Strong on: airplane mode, 5G vs 4G, MDM, BYOD 
     cards.forEach(c=>{ if(c.q==="What does DNS do, and what port does it use?"){ c.q = "What does DNS do?"; c.a = "It turns names like google.com into IP addresses. (Port 53 is on the ports card.)"; } });
     s.v = 31;
   }
+  if(s.v<32){
+    // v32: three ratings. Fairly productive becomes productive, drifting becomes dead time.
+    for(const d in (s.tlog||{})) s.tlog[d] = s.tlog[d].map(b=>b && (b.r==="lg" || b.r==="o") ? {...b, r:b.r==="lg" ? "g" : "r"} : b);
+    if(s.rateLast==="lg") s.rateLast = "g"; else if(s.rateLast==="o") s.rateLast = "r";
+    s.v = 32;
+  }
   return s;
 }
 function load(){
@@ -1976,6 +1982,18 @@ async function fileWrite(){
 async function fileLink(){
   try{
     const hd = await window.showSaveFilePicker({suggestedName:"life-login-data.json", types:JSON_TYPES});
+    // If you picked a file that already holds your data, offer to load it instead of writing over it
+    let p = null, f = null;
+    try{ f = await hd.getFile(); if(f.size) p = JSON.parse(await f.text()); }catch(e){ p = null; }
+    if(p && typeof p==="object" && Number.isInteger(p.v) && p.v>=1 && p.v<=DATA_V){
+      const when = new Date(f.lastModified).toLocaleString([], {weekday:"short", month:"short", day:"numeric", hour:"numeric", minute:"2-digit"});
+      const nCards = (p.learn && p.learn.cards || []).length, nDays = Object.keys(p.tlog || {}).length;
+      if(confirm(`${hd.name} already has your Life Login data in it (last saved ${when}: ${nCards} cards, ${nDays} days of time logged).\n\nLoad it into the app?\n\nOK = load the file (recommended)\nCancel = don't load it`)){
+        S = migrate(p); fileH = hd; await idbSet(hd); fileState = "ok"; S.fileAsk = false; save(); renderAll();
+        toast(`📂 Loaded ${hd.name}. Saving to it again.`, true); return;
+      }
+      if(!confirm(`Write over ${hd.name} with what's in the app right now instead?\n\nThe data in the file (last saved ${when}) will be replaced.`)) return;
+    }
     fileH = hd; await idbSet(hd); fileState = "ok"; S.fileAsk = false; save(); await fileWrite();
     toast(`💾 Saving to ${hd.name}. Every change now goes into that file too.`, true);
   }catch(e){ if(!(e && e.name==="AbortError")) toast("Couldn't set up the save file: " + (e && e.message || e)); }
@@ -3556,7 +3574,8 @@ function careDay(d){
   return {any, score, nut, rou, mn};
 }
 let cdSel = null, cdYear = null;
-const cdColor = s => RATE[cdLevel(s)[0]].c, cdInk = s => cdLevel(s)[0]==="y" ? "#2b2b2b" : "#fff";
+const CD_C = {g:"#22a35a", lg:"#8cc43c", y:"#efc12f", o:"#f08a2c", r:"#e04848"};
+const cdColor = s => CD_C[cdLevel(s)[0]], cdInk = s => cdLevel(s)[0]==="y" ? "#2b2b2b" : "#fff";
 let cdMode = "cal";
 // Calories for one day, in the same colors as the calorie card: red -> green by closeness, purple once reached
 const kShort = v => v>=1000 ? (v/1000).toFixed(1).replace(/\.0$/,"")+"k" : String(Math.round(v));
@@ -3648,13 +3667,13 @@ function renderCareTop(){
 // Ratings run green -> yellow -> red in 5 steps.
 const RATE = {
   g:{nm:"Productive", short:"Productive", c:"#22a35a", xp:5},
-  lg:{nm:"Fairly productive", short:"Fairly", c:"#8cc43c", xp:3},
-  y:{nm:"Neutral", short:"Neutral", c:"#efc12f", hint:"sleep, meals, rest"},
-  o:{nm:"Drifting", short:"Drifting", c:"#f08a2c", hint:"half-there"},
+  y:{nm:"Neutral", short:"Neutral", c:"#efc12f"},
   r:{nm:"Dead time", short:"Dead", c:"#e04848"}
 };
-const RKEYS = Object.keys(RATE), GOOD = ["g","lg"], BAD = ["o","r"];
-const zr = () => ({g:0,lg:0,y:0,o:0,r:0});
+const RKEYS = Object.keys(RATE), GOOD = ["g"], BAD = ["r"];
+const zr = () => ({g:0,y:0,r:0});
+// old ratings (from before v32, e.g. arriving from a device that isn't updated yet): fairly productive counts as productive, drifting as dead
+const rk = r => RATE[r] ? r : r==="lg" ? "g" : r==="o" ? "r" : "y";
 const sumOf = (o, keys) => keys.reduce((a,k)=>a+(o[k]||0), 0);
 const rdot = k => `<i class="rd" style="background:${(RATE[k]||RATE.y).c}"></i>`;
 let timeDate = null, sel = null, TT = null, dlgSel = null, dlgRate = "g";
@@ -3701,7 +3720,7 @@ function daySum(d){
   const arr = S.tlog[d]||[], k = zr();
   const past = d===today() ? curBlock()+1 : d<today() ? 48 : 0;
   let filled = 0;
-  arr.forEach((b,i)=>{ if(b){ k[b.r] += .5; if(i<past) filled++; } });
+  arr.forEach((b,i)=>{ if(b){ k[rk(b.r)] += .5; if(i<past) filled++; } });
   return {...k, un:Math.max(0,(past-filled)*.5)};
 }
 function sumHtml(d){
@@ -3804,9 +3823,6 @@ function openBlk(d, a, b, fromTap, tap){
   $("blkClear").hidden = !anyFilled;
   $("blkOne").hidden = !(fromTap && n>1);
   $("blkOne").textContent = `Only ${blockLabel(tap)}–${endLabel(tap)}`;
-  const rec = recentSummaries();
-  $("blkChipsWrap").hidden = !rec.length;
-  $("blkChips").innerHTML = rec.map(x=>`<button type="button" class="chip" data-act="blkUse" data-s="${esc(x.s)}" data-r="${x.r}"><i class="rd" style="background:${RATE[x.r].c}"></i>${esc(x.s)}</button>`).join("");
   $("blkDlg").showModal();
   if(!matchMedia("(pointer:coarse)").matches) setTimeout(()=>$("blkText").focus(), 30);
 }
@@ -3836,7 +3852,7 @@ function renderGreen(){
   const top = topWords(GOOD, 12);
   $("greenTop").innerHTML = top.length ? top.map(w=>`<div class="mini">${rdot(w.r)}<div class="grow">${esc(w.s)}</div>
       <small>${w.week ? `${fmtH(w.week)} this week · ` : ""}${fmtH(w.h)} total</small></div>`).join("")
-    : `<div class="empty">Mark some blocks green (productive or fairly productive) and they'll be grouped here by what you wrote.</div>`;
+    : `<div class="empty">Mark some blocks green (productive) and they'll be grouped here by what you wrote.</div>`;
 }
 function renderDead(){
   const K = TT.kinds, w = sumOf(K.week,BAD), lw = sumOf(K.lastWeek,BAD), diff = w-lw, m = sumOf(K.month,BAD);
@@ -3847,18 +3863,18 @@ function renderDead(){
     const arr = S.tlog[shiftDate(today(),-k)]; if(!arr) continue;
     arr.forEach((b,i)=>{ if(b && BAD.includes(b.r)){ pat[i] += b.r==="r" ? 1 : .5; any++; } });
   }
-  if(!any && !w){ $("dead").innerHTML = `<div class="empty">Mark some blocks orange (drifting) or red (dead time) and patterns will show up here, like which time of day it tends to happen and what it usually is.</div>`; return; }
+  if(!any && !w){ $("dead").innerHTML = `<div class="empty">Mark some blocks red (dead time) and patterns will show up here, like which time of day it tends to happen and what it usually is.</div>`; return; }
   const mx = Math.max(1, ...pat), W = 480, H = 70;
   let svg = `<svg viewBox="0 0 ${W} ${H+16}" class="mchart" role="img" aria-label="Dead time by time of day">`;
   pat.forEach((v,i)=>{ const bh = v/mx*H;
-    svg += `<rect x="${(i*W/48+1).toFixed(1)}" y="${(H-bh).toFixed(1)}" width="${(W/48-2).toFixed(1)}" height="${Math.max(0,bh).toFixed(1)}" rx="2" style="fill:${RATE.r.c}"><title>${blockLabel(i)}: dead or drifting time here in the last 4 weeks</title></rect>`; });
+    svg += `<rect x="${(i*W/48+1).toFixed(1)}" y="${(H-bh).toFixed(1)}" width="${(W/48-2).toFixed(1)}" height="${Math.max(0,bh).toFixed(1)}" rx="2" style="fill:${RATE.r.c}"><title>${blockLabel(i)}: dead time here in the last 4 weeks</title></rect>`; });
   svg += `<line x1="0" x2="${W}" y1="${H}" y2="${H}" style="stroke:var(--line)"/>`;
   [0,6,12,18].forEach(h=>svg += `<text x="${(h*2*W/48+2).toFixed(1)}" y="${H+13}" font-size="10" style="fill:var(--muted)">${hourLabel(h)}</text>`);
   svg += "</svg>";
   let peak = 0, pv = -1; for(let h=0;h<24;h++){ const v = pat[h*2]+pat[h*2+1]; if(v>pv){ pv = v; peak = h; } }
   $("dead").innerHTML = `<div class="nline" style="margin-bottom:8px">
       <span>This week: <b>${fmtH(w)}</b>${lw ? ` <span class="${diff<0?"up":diff>0?"down":""}">${diff<0?"▼"+fmtH(-diff):diff>0?"▲"+fmtH(diff):"same"} vs last week</span>` : ""}</span>
-      <span>This month: <b>${fmtH(m)}</b></span><span><small>${rdot("r")} dead ${fmtH(K.week.r)} · ${rdot("o")} drifting ${fmtH(K.week.o)} this week</small></span></div>
+      <span>This month: <b>${fmtH(m)}</b></span></div>
     ${top.length ? `<small>What it was this week:</small>${top.map(x=>`<div class="mini">${rdot(x.r)}<div class="grow">${esc(x.s)}</div><b>${fmtH(x.week)}</b></div>`).join("")}` : ""}
     <small>When it happens (last 4 weeks):</small>${svg}
     ${any ? `<p class="sub" style="margin:6px 0 0">It shows up most around <b>${hourLabel(peak)}–${hourLabel((peak+1)%24)}</b>. That's a good window to plan one small thing for.</p>` : ""}
@@ -4063,7 +4079,7 @@ function renderStats(){
   const pct = C.tracked ? Math.round(C.green/C.tracked*100) : 0;
   $("stKpi").innerHTML = [
     kpi("🟢","Green time", fmtH(C.green), C.tracked ? `${pct}% of ${fmtH(C.tracked)} tracked` : "nothing tracked yet", stDelta(C.green, Pv && Pv.green, fmtH, true)),
-    kpi("🔴","Dead & drifting", fmtH(C.bad), C.tracked ? `${Math.round(C.bad/C.tracked*100)}% of tracked time` : "", stDelta(C.bad, Pv && Pv.bad, fmtH, false)),
+    kpi("🔴","Dead time", fmtH(C.bad), C.tracked ? `${Math.round(C.bad/C.tracked*100)}% of tracked time` : "", stDelta(C.bad, Pv && Pv.bad, fmtH, false)),
     tgt ? kpi("🔥","Calorie target hit", `${C.calHit}<span class="of">/${C.calLogged}</span>`, C.calLogged ? `days · avg ${fmtK(C.kcal/C.calLogged)} kcal` : "no food logged", stDelta(C.calHit, Pv && Pv.calHit, v=>`${v} day${v===1?"":"s"}`, true))
         : kpi("🔥","Days food logged", C.calLogged, C.calLogged ? `avg ${fmtK(C.kcal/C.calLogged)} kcal` : "", stDelta(C.calLogged, Pv && Pv.calLogged, v=>`${v}`, true)),
     kpi("✅","To-dos finished", C.todo, `${putActive().length} still open`, stDelta(C.todo, Pv && Pv.todo, v=>`${v}`, true)),
@@ -4132,7 +4148,7 @@ function weekRecap(ws){
   if(care.length) parts.push(`🌿 Care: ${CD_LV.filter(l=>lv[l[0]]).map(l=>`${dot(RATE[l[0]].c)}<b>${lv[l[0]]}</b> ${l[2].toLowerCase()}`).join(", ")}`);
   if(best) parts.push(`⭐ Best day: <b>${best.d===t ? "today" : new Date(best.d+"T12:00").toLocaleDateString(undefined,{weekday:"long"})}</b> (${Math.round(best.c.score*100)}%)`);
   if(sumOf(k, GOOD)) parts.push(`🟢 <b>${fmtH(sumOf(k, GOOD))}</b> productive`);
-  if(sumOf(k, BAD)) parts.push(`🔴 <b>${fmtH(sumOf(k, BAD))}</b> dead or drifting, mostly around <b>${hourLabel(peak)}–${hourLabel((peak+1)%24)}</b>`);
+  if(sumOf(k, BAD)) parts.push(`🔴 <b>${fmtH(sumOf(k, BAD))}</b> dead time, mostly around <b>${hourLabel(peak)}–${hourLabel((peak+1)%24)}</b>`);
   if(todo) parts.push(`✅ <b>${todo}</b> to-do${todo>1?"s":""} finished`);
   if(skm) parts.push(`📘 <b>${skm}</b> skill session${skm>1?"s":""}`);
   return parts.length ? `<div class="recap">${parts.map(p=>`<div>${p}</div>`).join("")}</div>` : `<p class="sub">Nothing logged this week yet. The recap fills in as you go.</p>`;
@@ -4270,6 +4286,9 @@ function showTab(name){
   nagRoll();
 }
 $("tabs").addEventListener("click", e=>{ const b = e.target.closest("button[data-tab]"); if(b) showTab(b.dataset.tab); });
+// phone: block pinch-zoom (iPhone ignores the viewport setting on its own)
+["gesturestart","gesturechange"].forEach(t=>document.addEventListener(t, e=>{ if(isPhone()) e.preventDefault(); }, {passive:false}));
+document.addEventListener("touchmove", e=>{ if(e.touches.length>1 && isPhone()) e.preventDefault(); }, {passive:false});
 $("bnav").addEventListener("click", e=>{ const b = e.target.closest("button[data-tab]"); if(b){ showTab(b.dataset.tab); window.scrollTo(0,0); } });
 function setWidget(on){
   if(on) showTab("dash");
