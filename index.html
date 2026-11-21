@@ -2620,16 +2620,15 @@ function rPast(id){
 }
 // Step-by-step guide shown inside the Morning workout routine
 const WORKOUT_HOW = `
-  <p><b>About 25 minutes, every 3 days</b>, in the morning. The rest days in between are when the muscle grows. Drink a glass of water first.</p>
+  <p><b>About 20 minutes, every 3 days</b>, in the morning. The rest days in between are when the muscle grows. Drink a glass of water first.</p>
   <p><b>1. Warm up, 3 min</b><br>March in place 30 s · 10 arm circles each way · 10 leg swings per leg · 10 slow squats.</p>
   <p><b>2. The circuit</b>: do every set of one exercise, resting 60–90 s between sets, then move to the next.</p>
   <table class="wkt">
     <tr><th>Exercise</th><th>Sets × reps</th><th>How</th></tr>
     <tr><td>Push-ups</td><td>3 × 8–15</td><td>Lower for 3 seconds, chest almost to the floor, push up. Too easy? Feet on a chair.</td></tr>
     <tr><td>Squats</td><td>3 × 12–20</td><td>Feet shoulder-width, sit back like into a chair, heels down, lower slowly.</td></tr>
-    <tr><td>Table rows</td><td>3 × 8–12</td><td>Lie under a sturdy table, grab the edge, pull your chest up to it, lower slowly.</td></tr>
-    <tr><td>Glute bridges</td><td>3 × 12–15</td><td>On your back, knees bent, push hips up, squeeze 2 s at the top.</td></tr>
-    <tr><td>Reverse lunges</td><td>2 × 8 per leg</td><td>Step one foot back, lower the back knee near the floor, step back up.</td></tr>
+    <tr><td>Crunches</td><td>3 × 15–20</td><td>On your back, knees bent, hands by your ears. Curl your shoulders off the floor, pause, lower slowly. Don't pull on your neck.</td></tr>
+    <tr><td>6 inches</td><td>3 × 20–30 s</td><td>On your back, legs straight, lift your heels about 6 inches off the floor and hold. Press your lower back into the floor.</td></tr>
     <tr><td>Plank</td><td>3 × 30 s</td><td>On forearms and toes, straight line head to heels, squeeze your stomach.</td></tr>
   </table>
   <p><b>3. How hard</b>: end each set when you have only 1–2 good reps left. The burn is fine; sharp or joint pain means stop that exercise.</p>
@@ -2800,7 +2799,8 @@ $("wtForm").addEventListener("submit", e=>{
 });
 /* ---------- body: workout log with reps, protein goal (weight lives here too) ---------- */
 // S.body = {every:3, protein:100, wk:[{id, date, sets:{push:[12,12,10], ...}, t}]}
-const WK_EX = [["push","Push-ups",3,"8–15"],["squat","Squats",3,"12–20"],["row","Table rows",3,"8–12"],["bridge","Glute bridges",3,"12–15"],["lunge","Reverse lunges, per leg",2,"8"],["plank","Plank, seconds",3,"30"]];
+const WK_EX = [["push","Push-ups",3,"8–15"],["squat","Squats",3,"12–20"],["crunch","Crunches",3,"15–20"],["six","6 inches, seconds",3,"20–30"],["plank","Plank, seconds",3,"30"]];
+const WK_OLD = [["row","Table rows"],["bridge","Glute bridges"],["lunge","Reverse lunges"]];   // no longer in the plan; kept so old history reads right
 const BD = () => S.body || (S.body = {every:3, protein:100, wk:[]});
 const wkSorted = () => (BD().wk||[]).slice().sort((a,b)=>b.date.localeCompare(a.date) || (b.t||0)-(a.t||0));
 const wkTot = (w, k) => ((w.sets||{})[k]||[]).reduce((a,v)=>a+(+v||0),0);
@@ -2825,7 +2825,7 @@ function renderBody(){
   // history, with ▲ where a total beat the workout before it
   const hist = all.slice(0, 8);
   $("wkHist").innerHTML = hist.length ? hist.map((w, i)=>{ const before = all.slice(i+1).find(x=>Object.keys(x.sets||{}).length);
-    const parts = WK_EX.map(([k, nm])=>{ const s = (w.sets||{})[k]; if(!s || !s.length) return ""; const up = before && wkTot(w,k) > wkTot(before,k) && wkTot(before,k)>0;
+    const parts = WK_EX.concat(WK_OLD).map(([k, nm])=>{ const s = (w.sets||{})[k]; if(!s || !s.length) return ""; const up = before && wkTot(w,k) > wkTot(before,k) && wkTot(before,k)>0;
       return `<span class="wkpart">${nm.split(",")[0]} <b>${s.join("·")}</b>${up ? ` <i class="up">▲</i>` : ""}</span>`; }).filter(Boolean).join("");
     return `<div class="wkhrow"><div class="grow"><b>${w.date===t ? "Today" : shortDate(w.date)}</b><div>${parts || `<small class="sub">done (no reps logged)</small>`}</div></div><button class="x" data-act="wkDel" data-id="${w.id}" title="Delete">×</button></div>`; }).join("")
     : `<div class="empty">No workouts logged yet.</div>`;
