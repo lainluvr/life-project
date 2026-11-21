@@ -103,7 +103,19 @@ details summary{cursor:pointer;color:var(--muted);margin-top:8px}
 .panel h3{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:6px}
 .panel h3 .linkbtn{font-size:12px;text-transform:none;letter-spacing:0}
 .core{background:radial-gradient(130% 150% at 0% 0%,color-mix(in srgb,var(--accent) 24%,var(--panel)) 0%,var(--panel) 62%);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
-@media (min-width:1000px){ .dash .core, .dash .wide{grid-column:span 2} }
+/* panel sizes: S = one column, M = two, L = the whole row */
+.dash .panel[data-size="l"]{grid-column:1/-1}
+@media (min-width:701px){ .dash .panel[data-size="m"]{grid-column:span 2} }
+.ptool{display:none}
+body.dashedit .ptool{display:flex;gap:6px;align-items:center;margin:-4px 0 10px;padding:6px;border-radius:10px;background:var(--tint2)}
+.ptool button, .ptool .pdrag{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:8px;padding:6px 10px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.ptool .pdrag{cursor:grab;touch-action:none;user-select:none;font-size:16px;padding:4px 10px}
+.ptool .grow{flex:1}
+body.dashedit .dash .panel{outline:2px dashed color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+.dash .panel.dragging{opacity:.5}
+.dashtray{display:none}
+body.dashedit .dashtray{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;padding:12px;border:1px dashed var(--line);border-radius:14px}
+.dashtray small{color:var(--muted);width:100%}
 /* time */
 .brushes{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;align-items:center}
 .brush{border:1px solid var(--line);background:var(--panel2);border-radius:99px;padding:3px 10px 3px 6px;cursor:pointer;font-size:13px;display:inline-flex;gap:5px;align-items:center}
@@ -749,7 +761,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 @media (max-width:700px){
   html, body{overflow-x:hidden;overscroll-behavior:none;touch-action:pan-y}
   input, textarea, select{font-size:16px!important}   /* 16px stops the phone zooming in when you tap a box */
-  nav.tabs, header.top .stats, #widgetBtn, .mhide, #tab-dash .panel.core{display:none!important}
+  nav.tabs, header.top .stats, .mhide, #tab-dash .panel.core{display:none!important}
   header.top{padding:10px 0}
   header.top .brand{font-size:18px}
   .wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
@@ -853,11 +865,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
 <section id="tab-dash">
   <div class="dashbar">
     <div><b id="dGreet">Hello</b><small id="dDate"></small></div>
-    <button class="btn" data-act="widget" id="widgetBtn">⛶ Widget mode</button>
+    <button class="btn" data-act="dashEdit" id="dashEditBtn">✏️ Edit layout</button>
   </div>
   <div id="dQuick"></div>
   <div class="dash">
-    <div class="panel core">
+    <div class="panel core" data-pid="time">
       <h3><span>⏳ Where today is going</span><button class="linkbtn" data-act="goto" data-tab="time">week &amp; patterns</button></h3>
       <div id="dBrush"></div>
       <div id="dDay"></div>
@@ -866,7 +878,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
       <small>Tap or drag across the half-hour blocks, then write what you did and pick a color from green (productive) through yellow (neutral) to red (dead time). Fill it in whenever you remember.</small>
     </div>
 
-    <div class="panel">
+    <div class="panel" data-pid="today">
       <h3><span>🌤️ Today</span><small id="dDueCount"></small></h3>
       <div id="dFocus"></div>
       <div class="sectlabel mhide" style="margin-top:4px">Care this week <button class="linkbtn" data-act="goto" data-tab="care" style="font-size:11px;margin-left:4px">details</button></div>
@@ -876,7 +888,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
       <div id="dDue"></div>
     </div>
 
-    <div class="panel">
+    <div class="panel" data-pid="food">
       <h3><span>🔥 Food &amp; water</span><button class="linkbtn" data-act="goto" data-tab="care">open</button></h3>
       <div id="dCal"></div>
       <form id="dCalForm" class="dcalform">
@@ -887,28 +899,34 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
       <div id="dNutri" style="margin-top:8px"></div>
     </div>
 
-    <div class="panel">
+    <div class="panel" data-pid="skills">
       <h3><span>📘 Skills</span><button class="linkbtn" data-act="goto" data-tab="brain">open</button></h3>
       <div id="dBrain"></div>
     </div>
 
-    <div class="panel wide">
+    <div class="panel" data-pid="glance">
       <h3><span>📊 <span id="dKpiLbl">This week</span></span><button class="linkbtn" data-act="setGo" data-g="stats">more stats</button></h3>
       <div class="kpis" id="dKpi"></div>
     </div>
 
-    <div class="panel">
+    <div class="panel" data-pid="cal">
       <h3><span>🔥 Calories</span><small id="stCalSum"></small></h3>
       <div id="stCal"></div>
     </div>
 
-    <div class="panel">
+    <div class="panel" data-pid="heat">
       <h3><span>🗓️ Consistency</span></h3>
       <div id="heat"></div>
       <small id="heatInfo" style="display:block;margin-top:6px"></small>
       <small class="sub">Each square is a day (columns are weeks). Greener means more things done.</small>
     </div>
+
+    <div class="panel" data-pid="weight">
+      <h3><span>⚖️ Weight</span><button class="linkbtn" data-act="goto" data-tab="body">log</button></h3>
+      <div id="dWeight"></div>
+    </div>
   </div>
+  <div class="dashtray" id="dashTray"></div>
 </section>
 
 <!-- CARDS (phone): one big flashcard at a time -->
@@ -2158,7 +2176,7 @@ async function bkInit(){
 // compressed and locked with AES-256-GCM, and only that locked copy is uploaded. Firebase can't read it.
 const FB_V = "12.6.0";
 // Settings that belong to one device, and old parts of the app that only stay on the PC: never uploaded
-const SYNC_LOCAL = ["fileAsk","widget","setTab","careFocus","careSide","alarm","hyper","nagMix","theme","accent",
+const SYNC_LOCAL = ["dashLay","fileAsk","widget","setTab","careFocus","careSide","alarm","hyper","nagMix","theme","accent",
   "shelves","items","qol","bf","bn","brainArchive","journal","journalBonus","ach","well","wellBonus"];
 const SK_BASE = KEY+".syncBase", SK_SNAP = KEY+".syncSnap", SK_DEV = KEY+".device", SK_BEFORE = KEY+".beforeSync";
 const TEST_HOST = location.hostname==="localhost" || location.hostname==="127.0.0.1";
@@ -2678,6 +2696,11 @@ function renderWeight(){
     ${recent.length ? `<div class="sectlabel">Recent</div>` + recent.map(x=>{ const e = L[x];
       return `<div class="wtrow"><span>${x===t ? "Today" : niceDate(x).replace(/, \d{4}$/,"")}</span><span>${wtF(e.am)} lb</span><button class="x" data-act="wtDel" data-id="${x}" title="Delete this day">×</button></div>`; }).join("") : ""}
     ${st ? `<small class="sub" style="display:block;margin-top:8px">First check: ${wtF(st.v)} lb on ${niceDate(st.date)}${st.note ? ` (${esc(st.note)})` : ""}.</small>` : ""}`;
+}
+// dashboard copy: the numbers and the chart from Body → Weight
+function renderDashWeight(){
+  const dw = $("dWeight"); if(!dw) return;
+  dw.innerHTML = [...$("wtBody").children].filter(n=>n.matches(".wtstats, svg, p")).map(n=>n.outerHTML).join("") || `<p class="sub">No weigh-ins yet. Log one in Body.</p>`;
 }
 $("wtForm").addEventListener("change", e=>{ if(e.target.name==="date"){ wtFilledFor = null; renderWeight(); } });
 $("wtForm").addEventListener("submit", e=>{
@@ -4147,8 +4170,7 @@ const L_CAL = 44;
 function stCalChart(B){
   const W = 600, H = 190, L = 40, Bt = 18, top = 8, n = B.length, slot = (W-L)/n, bw = Math.max(3, slot*0.7), tgt = calTarget();
   const X = i => L + slot*i + slot/2;
-  const wm = weightMetric(), hasW = wm && B.some(b=>dRange(b.from,b.to).some(d=>typeof wm.log[d]==="number"));
-  if(!hasW && !B.some(b=>dRange(b.from,b.to).some(d=>dayFood(d).length))) return `<div class="empty">No food logged in this stretch yet.</div>`;
+  if(!B.some(b=>dRange(b.from,b.to).some(d=>dayFood(d).length))) return `<div class="empty">No food logged in this stretch yet.</div>`;
   let s = `<svg viewBox="0 0 ${W} ${H}" class="stchart" role="img" aria-label="Calories">`;
   if(B[0].day){
     const vals = B.map(b=>dayKcal(b.from)), max = Math.max(tgt*1.25, ...vals, 500), Y = v => (H-Bt) - v/max*(H-Bt-top);
@@ -4166,7 +4188,7 @@ function stCalChart(B){
       const seg = (v,c,lbl) => { if(!v) return ""; const h = v/max*(H-Bt-top); y0 -= h; return `<rect x="${x}" y="${y0.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="1.5" style="fill:${c}"><title>${esc(B[i].tip)}: ${v} day${v===1?"":"s"} ${lbl}</title></rect>`; };
       s += tgt ? seg(o.hit,calHitC(),calIsMin() ? "reached" : "on target") + seg(o.miss,calMissC(o.miss ? o.sum/o.miss : 0, tgt), calMode()==="max" ? "over target" : "under target") : seg(o.logged,"var(--accent)","logged"); });
   }
-  return s + weightLine(B, X, H, Bt, top, W) + stAxis(B, X, H) + `</svg>`;
+  return s + stAxis(B, X, H) + `</svg>`;
 }
 function renderStats(){
   $("stPeriod").innerHTML = Object.entries(ST_P).map(([k,v])=>`<button class="chip ${stPeriod===k?"on":""}" data-act="stPeriod" data-p="${k}">${v.lbl}</button>`).join("");
@@ -4314,7 +4336,6 @@ function renderDash(){
   $("dCareRou").innerHTML = wk.map(d=>mini(d, rouCell(d))).join("");
   $("dGreet").textContent = h<5 ? "Late night ✦" : h<12 ? "Good morning ☀️" : h<18 ? "Good afternoon 🌤️" : "Good evening 🌙";
   $("dDate").textContent = new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
-  $("widgetBtn").textContent = S.widget ? "✕ Exit widget mode" : "⛶ Widget mode";
   const focus = latestFocus();
   $("dFocus").innerHTML = focus ? `<p class="sub" style="margin-bottom:8px">🎯 Focus this week: <b>${esc(focus)}</b></p>` : "";
   const due = S.routines.map(r=>({r,st:rState(r)})).filter(x=>x.st.k!=="ok").sort((a,b)=>(a.st.k==="over"?0:1)-(b.st.k==="over"?0:1));
@@ -4333,6 +4354,7 @@ function renderDash(){
   $("dTimer").innerHTML = `<div class="sectlabel">Latest</div>` + storyHtml(t, 3);
   $("dSum").innerHTML = sumHtml(t) + dayHintHtml(t);
   $("dBrain").innerHTML = skDashHtml();
+  renderDashWeight(); applyDash();
   { const L = sbLast(), b = blkOf(L.d, L.i), when = `${blockLabel(L.i)}–${endLabel(L.i)}`, fd = fcDue().length;
     $("dQuick").innerHTML = `<button class="qbtn${b ? "" : " go"}" data-act="fillLast"><span class="qi">${b ? "✅" : "⏳"}</span>
         <div class="grow"><b>${b ? "Last half-hour filled in" : "Fill in the last half-hour"}</b><small>${when}${b ? ` · ${esc(b.s || RATE[b.r].nm)}` : ""}</small></div><span class="qa">›</span></button>`
@@ -4389,6 +4411,62 @@ $("tabs").addEventListener("click", e=>{ const b = e.target.closest("button[data
 ["gesturestart","gesturechange"].forEach(t=>document.addEventListener(t, e=>{ if(isPhone()) e.preventDefault(); }, {passive:false}));
 document.addEventListener("touchmove", e=>{ if(e.touches.length>1 && isPhone()) e.preventDefault(); }, {passive:false});
 $("bnav").addEventListener("click", e=>{ const b = e.target.closest("button[data-tab]"); if(b){ showTab(b.dataset.tab); window.scrollTo(0,0); } });
+// ---- dashboard layout: order, size (s/m/l) and hidden panels. Each device keeps its own (dashLay is in SYNC_LOCAL).
+const DASH_DEF = {order:["time","today","food","skills","glance","cal","heat","weight"], size:{time:"m", glance:"m"}};
+let dashEdit = false, dashDrag = null;
+function dashLay(){
+  const L = S.dashLay || {}, order = (L.order||[]).filter(p=>DASH_DEF.order.includes(p));
+  DASH_DEF.order.forEach(p=>{ if(!order.includes(p)) order.push(p); });
+  return {order, size:{...DASH_DEF.size, ...(L.size||{})}, hide:(L.hide||[]).filter(p=>DASH_DEF.order.includes(p))};
+}
+const dashGrid = () => document.querySelector("#tab-dash .dash");
+const dashName = el => (el.querySelector("h3 > span")||{}).textContent || el.dataset.pid;
+function applyDash(){
+  const L = dashLay(), g = dashGrid(); if(!g) return;
+  L.order.forEach(p=>{
+    const el = g.querySelector(`[data-pid="${p}"]`); if(!el) return;
+    g.appendChild(el); el.dataset.size = L.size[p] || "s"; el.hidden = L.hide.includes(p);
+    let tb = el.querySelector(".ptool");
+    if(!tb){ tb = document.createElement("div"); tb.className = "ptool"; el.prepend(tb); }
+    tb.innerHTML = `<span class="pdrag" title="Drag to move">⠿</span><button data-act="pMove" data-d="-1" title="Move earlier">${isPhone() ? "▲" : "◀"}</button><button data-act="pMove" data-d="1" title="Move later">${isPhone() ? "▼" : "▶"}</button><span class="grow"></span>${isPhone() ? "" : `<button data-act="pSize" title="Size: small, medium or large">${(L.size[p]||"s").toUpperCase()}</button>`}<button data-act="pHide" title="Hide this panel">Hide</button>`;
+  });
+  const hid = L.order.filter(p=>L.hide.includes(p));
+  $("dashTray").innerHTML = `<small>${hid.length ? "Hidden panels, tap one to bring it back:" : "Hidden panels show up here."} <button class="linkbtn" data-act="dashReset">Reset layout</button></small>`
+    + hid.map(p=>`<button class="btn sm" data-act="pShow" data-p="${p}">+ ${esc(dashName(g.querySelector(`[data-pid="${p}"]`)))}</button>`).join("");
+  const b = $("dashEditBtn"); if(b){ b.textContent = dashEdit ? "✓ Done" : "✏️ Edit layout"; b.classList.toggle("primary", dashEdit); }
+}
+function dashSave(L){ S.dashLay = L; save(); applyDash(); }
+function dashAct(act, b){
+  const L = dashLay(), el = b.closest("[data-pid]"), p = el && el.dataset.pid;
+  if(act==="pMove" && p){
+    const vis = L.order.filter(x=>!L.hide.includes(x)), i = vis.indexOf(p), j = i + (+b.dataset.d);
+    if(j<0 || j>=vis.length) return;
+    const a = L.order.indexOf(p), c = L.order.indexOf(vis[j]); [L.order[a], L.order[c]] = [L.order[c], L.order[a]];
+  }
+  else if(act==="pSize" && p) L.size[p] = {s:"m", m:"l", l:"s"}[L.size[p]||"s"];
+  else if(act==="pHide" && p){ L.hide.push(p); toast(`Hid ${dashName(el)}. It's in the tray at the bottom if you want it back.`); }
+  else if(act==="pShow") L.hide = L.hide.filter(x=>x!==b.dataset.p);
+  else if(act==="dashReset"){ delete S.dashLay; save(); applyDash(); toast("Layout reset."); return; }
+  dashSave(L);
+}
+// drag the ⠿ handle to move a panel (mouse or finger)
+document.addEventListener("pointerdown", e=>{
+  const hd = e.target.closest && e.target.closest(".pdrag"); if(!hd || !dashEdit) return;
+  e.preventDefault(); dashDrag = hd.closest("[data-pid]"); dashDrag.classList.add("dragging");
+});
+document.addEventListener("pointermove", e=>{
+  if(!dashDrag) return;
+  const t = document.elementFromPoint(e.clientX, e.clientY), over = t && t.closest && t.closest("#tab-dash .dash > [data-pid]");
+  if(!over || over===dashDrag) return;
+  const g = dashGrid(), kids = [...g.children];
+  g.insertBefore(dashDrag, kids.indexOf(over) > kids.indexOf(dashDrag) ? over.nextSibling : over);
+});
+const dashDrop = ()=>{
+  if(!dashDrag) return; dashDrag.classList.remove("dragging"); dashDrag = null;
+  const L = dashLay(); L.order = [...dashGrid().querySelectorAll(":scope > [data-pid]")].map(x=>x.dataset.pid); dashSave(L);
+};
+document.addEventListener("pointerup", dashDrop);
+document.addEventListener("pointercancel", dashDrop);
 function setWidget(on){
   if(on) showTab("dash");
   S.widget = on; save();
@@ -4406,6 +4484,9 @@ document.addEventListener("click", e=>{
     case "tdClose": $("todoDlg").close(); break;
     case "fillLast": { const L = sbLast(); openBlk(L.d, L.i, L.i, false); break; }
     case "widget": setWidget(!S.widget); break;
+    case "dashEdit": dashEdit = !dashEdit; document.body.classList.toggle("dashedit", dashEdit); applyDash();
+      if(dashEdit) toast(isPhone() ? "Drag ⠿ or use ▲ ▼ to move a panel. Hide tucks one away. Tap Done when finished." : "Drag ⠿ or use ◀ ▶ to move a panel. S, M, L change its size. Tap Done when finished."); break;
+    case "pMove": case "pSize": case "pHide": case "pShow": case "dashReset": dashAct(b.dataset.act, b); break;
     case "blkRepeat": {
       const rg = repeatGap(); if(!rg) break; const t = today();
       for(let i=rg.from;i<=rg.to;i++) setBlock(t, i, {...rg.b}); mappedBonus(t);
@@ -4719,7 +4800,8 @@ try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persis
 fillEst(); { const f = $("estForm").elements; if(f.hu.value==="cm"){ f.h2.style.display = "none"; f.h1.placeholder = "cm"; } }
 lastDay = today(); lastBlock = curBlock();
 let startTab = "dash"; try{ startTab = localStorage.getItem(KEY+".tab") || "dash"; }catch(e){}
-showTab(S.widget ? "dash" : startTab);
+if(S.widget){ S.widget = false; document.body.classList.remove("widget"); }
+showTab(startTab);
 renderAll(); save();
 fileInit().then(bkInit); syncInit();
 setInterval(clock, 1000); clock();
