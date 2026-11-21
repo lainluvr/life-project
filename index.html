@@ -98,18 +98,31 @@ details summary{cursor:pointer;color:var(--muted);margin-top:8px}
 /* dashboard */
 .dashbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:4px 0 12px;flex-wrap:wrap}
 .dashbar b{font-size:20px;display:block}
-.dash{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;align-items:start}
+.dash{display:flex;flex-direction:column}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow);min-width:0}
 .panel h3{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:6px}
 .panel h3 .linkbtn{font-size:12px;text-transform:none;letter-spacing:0}
 .core{background:radial-gradient(130% 150% at 0% 0%,color-mix(in srgb,var(--accent) 24%,var(--panel)) 0%,var(--panel) 62%);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
-/* widgets: size set by dragging the corner grip in Edit layout */
-.dash .panel{position:relative}
-.dash .panel.fixedh{overflow:auto}
-.pgrip{display:none}
-body.dashedit .pgrip{display:block;position:absolute;right:2px;bottom:2px;width:22px;height:22px;cursor:nwse-resize;touch-action:none;border-radius:0 0 12px 0;
-  background:linear-gradient(135deg,transparent 50%,var(--accent) 50%,var(--accent) 60%,transparent 60%,transparent 70%,var(--accent) 70%,var(--accent) 80%,transparent 80%)}
-.dash .panel.resizing{outline-style:solid}
+/* widgets sit in rows; the gaps between them are dividers you drag (like split windows) */
+.dashrow{display:flex;align-items:stretch}
+.dashrow > .panel{position:relative;min-width:0;display:flex;flex-direction:column;overflow:hidden}
+.dashrow.fixed > .panel{min-height:0}
+.pbox{flex:1 1 auto;min-width:0;min-height:0}
+.dashrow.fixed .pbox{flex-basis:0;overflow:auto}
+.dsx{flex:none;width:12px;cursor:col-resize;touch-action:none;position:relative}
+.dsy{height:12px;cursor:row-resize;touch-action:none;position:relative}
+.dsx::after, .dsy::after{content:"";position:absolute;border-radius:9px;background:var(--accent);opacity:0;transition:opacity .15s}
+.dsx::after{left:4px;width:4px;top:12px;bottom:12px}
+.dsy::after{top:4px;height:4px;left:12px;right:12px}
+.dsx:hover::after, .dsy:hover::after{opacity:.45}
+body.dashedit .dsx::after, body.dashedit .dsy::after{opacity:.3}
+.dsx.on::after, .dsy.on::after{opacity:.8}
+body.dashsizing{user-select:none}
+body.dashsizing.sx, body.dashsizing.sx *{cursor:col-resize!important}
+body.dashsizing.sy, body.dashsizing.sy *{cursor:row-resize!important}
+.dash .panel.dropL{box-shadow:inset 5px 0 0 var(--accent)} .dash .panel.dropR{box-shadow:inset -5px 0 0 var(--accent)}
+.dash .panel.dropT{box-shadow:inset 0 5px 0 var(--accent)} .dash .panel.dropB{box-shadow:inset 0 -5px 0 var(--accent)}
+@media (max-width:700px){ body:not(.dashedit) .dsx, body:not(.dashedit) .dsy{pointer-events:none} }
 .wttick{stroke:var(--line);stroke-width:1.5} .wttick.on{stroke:var(--accent)}
 .wtchart line.amseg{stroke:var(--accent);stroke-width:2}
 .wtrow.wtmiss{color:var(--muted);font-style:italic}
@@ -940,6 +953,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
     </div>
   </div>
   <div class="dashtray" id="dashTray"></div>
+  <div id="dashHold" hidden></div>
 </section>
 
 <!-- CARDS (phone): one big flashcard at a time -->
@@ -4433,94 +4447,191 @@ $("tabs").addEventListener("click", e=>{ const b = e.target.closest("button[data
 ["gesturestart","gesturechange"].forEach(t=>document.addEventListener(t, e=>{ if(isPhone()) e.preventDefault(); }, {passive:false}));
 document.addEventListener("touchmove", e=>{ if(e.touches.length>1 && isPhone()) e.preventDefault(); }, {passive:false});
 $("bnav").addEventListener("click", e=>{ const b = e.target.closest("button[data-tab]"); if(b){ showTab(b.dataset.tab); window.scrollTo(0,0); } });
-// ---- dashboard layout: order, size (s/m/l) and hidden panels. Each device keeps its own (dashLay is in SYNC_LOCAL).
-const DASH_DEF = {order:["time","today","todo","food","water","skills","glance","cal","heat","weight"], size:{time:{w:2}, glance:{w:2}}};
-let dashEdit = false, dashDrag = null;
+// ---- dashboard layout: rows of widgets with dividers you drag between them (like split windows).
+// S.dashLay = {rows:[{h:height in px or null for natural, items:[{p:widget, f:share of the row}]}], hide:[widgets]}
+// Each device keeps its own (dashLay is in SYNC_LOCAL).
+const DASH_ALL = ["time","today","todo","food","water","skills","glance","cal","heat","weight"];
+const DASH_PC = [[["time",2],["today",1]], [["todo",1],["food",1],["water",1]], [["skills",1],["glance",2]], [["cal",1],["heat",1],["weight",1]]];
+const dashMinW = () => isPhone() ? 110 : 170, DASH_MIN_H = 110, dashMaxRow = () => isPhone() ? 2 : 4;
+let dashEdit = false;
+const dashSkip = p => isPhone() && p==="time";   // the day grid isn't shown on the phone
+function dashDefault(){
+  const rows = isPhone() ? DASH_ALL.filter(p=>!dashSkip(p)).map(p=>[[p,1]]) : DASH_PC;
+  return {rows: rows.map(r=>({h:null, items:r.map(([p,f])=>({p,f}))})), hide:[]};
+}
 function dashLay(){
-  const L = S.dashLay || {}, order = (L.order||[]).filter(p=>DASH_DEF.order.includes(p));
-  // a widget that's new since the layout was saved goes right after its neighbour from the default order
-  DASH_DEF.order.forEach((p,i)=>{ if(order.includes(p)) return; const prev = DASH_DEF.order.slice(0,i).reverse().find(x=>order.includes(x)); order.splice(prev ? order.indexOf(prev)+1 : 0, 0, p); });
-  return {order, size:{...DASH_DEF.size, ...(L.size||{})}, hide:(L.hide||[]).filter(p=>DASH_DEF.order.includes(p))};
+  let L = S.dashLay;
+  if(!L || !Array.isArray(L.rows)){
+    if(L && Array.isArray(L.order)){   // older saved layout (order + sizes): pack it into rows
+      const cols = isPhone() ? 1 : 3, rows = []; let cur = null, used = 0;
+      L.order.filter(p=>DASH_ALL.includes(p) && !(L.hide||[]).includes(p) && !dashSkip(p)).forEach(p=>{
+        const v = (L.size||{})[p], w = Math.min(cols, typeof v==="string" ? (v==="l" ? cols : v==="m" ? 2 : 1) : (v && v.w) || 1);
+        if(!cur || used + w > cols){ cur = {h:null, items:[]}; rows.push(cur); used = 0; }
+        cur.items.push({p, f:w}); used += w;
+      });
+      L = {rows, hide:L.hide||[]};
+    } else L = dashDefault();
+  }
+  // known widgets only, each one once
+  const seen = new Set();
+  const hide = (L.hide||[]).filter(p=>DASH_ALL.includes(p) && !seen.has(p) && seen.add(p));
+  const rows = (L.rows||[]).map(r=>({h: r.h>0 ? Math.round(r.h) : null,
+    items:(r.items||[]).filter(it=>it && DASH_ALL.includes(it.p) && !seen.has(it.p) && seen.add(it.p)).map(it=>({p:it.p, f: it.f>0 ? it.f : 1}))})).filter(r=>r.items.length);
+  // a widget that's new since the layout was saved gets its own row after its neighbour from the default order
+  DASH_ALL.forEach((p,i)=>{
+    if(seen.has(p) || dashSkip(p)) return;
+    const prev = DASH_ALL.slice(0,i).reverse().find(x=>rows.some(r=>r.items.some(it=>it.p===x)));
+    rows.splice(prev ? rows.findIndex(r=>r.items.some(it=>it.p===prev)) + 1 : 0, 0, {h:null, items:[{p, f:1}]}); seen.add(p);
+  });
+  return {rows, hide};
 }
 const dashGrid = () => document.querySelector("#tab-dash .dash");
+const dashEl = p => document.querySelector(`#tab-dash [data-pid="${p}"]`);
 const dashName = el => (el.querySelector("h3 > span")||{}).textContent || el.dataset.pid;
-const dashCols = g => Math.max(1, getComputedStyle(g).gridTemplateColumns.split(" ").filter(Boolean).length);
-const dashSz = (v, cols) => { if(typeof v==="string") v = {w: v==="l" ? 99 : v==="m" ? 2 : 1}; v = v || {}; return {w: Math.max(1, Math.min(v.w||1, cols)), h: v.h || null}; };
+// panel = edit toolbar + .pbox (the room the content gets) + .pin (the content, scaled to fit that room)
+function dashWrap(el){
+  if(el.querySelector(":scope > .pbox")) return;
+  const box = document.createElement("div"), pin = document.createElement("div"), tb = document.createElement("div");
+  box.className = "pbox"; pin.className = "pin"; tb.className = "ptool";
+  [...el.childNodes].forEach(n=>pin.appendChild(n));
+  box.appendChild(pin); el.append(tb, box);
+}
+// scale a widget's content so it fills the widget: bigger widget, bigger content (only once its row has a set height)
+function dashFit(el){
+  const box = el.querySelector(":scope > .pbox"), pin = box && box.firstElementChild; if(!pin) return;
+  if(!el.parentElement || !el.parentElement.classList.contains("fixed")){ pin.style.zoom = ""; el._z = 1; return; }
+  const H = box.clientHeight; if(!H || !el.offsetParent) return;
+  const fits = z => { pin.style.zoom = z; return box.scrollHeight <= H + 1 && box.scrollWidth <= box.clientWidth + 1; };
+  const LO = 0.6, HI = 1.5, z0 = el._z;
+  if(z0 && fits(z0) && (z0>=HI || !fits(Math.min(HI, z0 + 0.03)))){ pin.style.zoom = z0; return; }   // still right, nothing to do
+  let lo = LO, hi = HI, z;
+  if(fits(HI)) z = HI;
+  else if(!fits(LO)) z = LO;   // too much to fit even small: it scrolls
+  else { for(let i=0;i<7;i++){ const m = (lo+hi)/2; if(fits(m)) lo = m; else hi = m; } z = lo; }
+  pin.style.zoom = z; el._z = z;
+}
+const dashFitAll = () => document.querySelectorAll("#tab-dash .dashrow > .panel").forEach(dashFit);
+let dashFitQ = new Set(), dashFitRaf = 0;
+function dashFitSoon(els){ els.forEach(x=>dashFitQ.add(x)); if(!dashFitRaf) dashFitRaf = requestAnimationFrame(()=>{ dashFitRaf = 0; const q = [...dashFitQ]; dashFitQ.clear(); q.forEach(dashFit); }); }
 function applyDash(){
-  const L = dashLay(), g = dashGrid(); if(!g) return;
-  const cols = dashCols(g);
-  L.order.forEach(p=>{
-    const el = g.querySelector(`[data-pid="${p}"]`); if(!el) return;
-    g.appendChild(el); el.hidden = L.hide.includes(p);
-    const z = dashSz(L.size[p], cols); el.style.gridColumn = z.w>1 ? `span ${z.w}` : ""; el.style.height = z.h ? z.h + "px" : ""; el.classList.toggle("fixedh", !!z.h);
-    if(!el.querySelector(".pgrip")){ const gr = document.createElement("span"); gr.className = "pgrip"; gr.title = "Drag to resize · double-click to reset"; el.appendChild(gr); }
-    let tb = el.querySelector(".ptool");
-    if(!tb){ tb = document.createElement("div"); tb.className = "ptool"; el.prepend(tb); }
-    tb.innerHTML = `<span class="pdrag" title="Drag to move">⠿</span><button data-act="pMove" data-d="-1" title="Move earlier">${isPhone() ? "▲" : "◀"}</button><button data-act="pMove" data-d="1" title="Move later">${isPhone() ? "▼" : "▶"}</button><span class="grow"></span><button data-act="pHide" title="Hide this panel">Hide</button>`;
+  const L = dashLay(), g = dashGrid(), hold = $("dashHold"); if(!g) return;
+  DASH_ALL.forEach(p=>{ const el = dashEl(p); if(el){ dashWrap(el); hold.appendChild(el); } });
+  g.innerHTML = "";
+  const ph = isPhone();
+  L.rows.forEach((r, ri)=>{
+    const items = r.items.filter(it=>!dashSkip(it.p) && dashEl(it.p)); if(!items.length) return;
+    const row = document.createElement("div"); row.className = "dashrow" + (r.h ? " fixed" : ""); row.dataset.ri = ri;
+    if(r.h) row.style.height = r.h + "px";
+    items.forEach((it, k)=>{
+      if(k){ const s = document.createElement("div"); s.className = "dsx"; s.dataset.a = r.items.indexOf(items[k-1]); s.dataset.b = r.items.indexOf(it); s.title = "Drag to resize · double-click to even out"; row.appendChild(s); }
+      const el = dashEl(it.p); el.style.flex = `${it.f} 1 0`; row.appendChild(el);
+      el.querySelector(":scope > .ptool").innerHTML = `<span class="pdrag" title="Drag onto another widget's side, top or bottom">⠿</span><button data-act="pMove" data-d="-1" title="Move earlier">${ph ? "▲" : "◀"}</button><button data-act="pMove" data-d="1" title="Move later">${ph ? "▼" : "▶"}</button><span class="grow"></span><button data-act="pHide" title="Hide this widget">Hide</button>`;
+    });
+    g.appendChild(row);
+    const sy = document.createElement("div"); sy.className = "dsy"; sy.title = "Drag to resize · double-click for natural height"; g.appendChild(sy);
   });
-  const hid = L.order.filter(p=>L.hide.includes(p));
-  $("dashTray").innerHTML = `<small>${hid.length ? "Hidden panels, tap one to bring it back:" : "Hidden panels show up here."} <button class="linkbtn" data-act="dashReset">Reset layout</button></small>`
-    + hid.map(p=>`<button class="btn sm" data-act="pShow" data-p="${p}">+ ${esc(dashName(g.querySelector(`[data-pid="${p}"]`)))}</button>`).join("");
+  const hid = L.hide.filter(p=>dashEl(p));
+  $("dashTray").innerHTML = `<small>${hid.length ? "Hidden widgets, tap one to bring it back:" : "Hidden widgets show up here."} <button class="linkbtn" data-act="dashReset">Reset layout</button></small>`
+    + hid.map(p=>`<button class="btn sm" data-act="pShow" data-p="${p}">+ ${esc(dashName(dashEl(p)))}</button>`).join("");
   const b = $("dashEditBtn"); if(b){ b.textContent = dashEdit ? "✓ Done" : "✏️ Edit layout"; b.classList.toggle("primary", dashEdit); }
+  dashFitAll();
 }
 function dashSave(L){ S.dashLay = L; save(); applyDash(); }
+const dashPull = (L, p) => { L.rows.forEach(r=>{ r.items = r.items.filter(it=>it.p!==p); }); L.rows = L.rows.filter(r=>r.items.length); };
 function dashAct(act, b){
   const L = dashLay(), el = b.closest("[data-pid]"), p = el && el.dataset.pid;
-  if(act==="pMove" && p){
-    const vis = L.order.filter(x=>!L.hide.includes(x)), i = vis.indexOf(p), j = i + (+b.dataset.d);
-    if(j<0 || j>=vis.length) return;
-    const a = L.order.indexOf(p), c = L.order.indexOf(vis[j]); [L.order[a], L.order[c]] = [L.order[c], L.order[a]];
+  if(act==="pMove" && p){   // swap places with the widget before or after it
+    const flat = []; L.rows.forEach(r=>r.items.forEach(it=>{ if(!dashSkip(it.p)) flat.push(it); }));
+    const i = flat.findIndex(it=>it.p===p), j = i + (+b.dataset.d);
+    if(i<0 || j<0 || j>=flat.length) return;
+    [flat[i].p, flat[j].p] = [flat[j].p, flat[i].p];
   }
-  else if(act==="pHide" && p){ L.hide.push(p); toast(`Hid ${dashName(el)}. It's in the tray at the bottom if you want it back.`); }
-  else if(act==="pShow") L.hide = L.hide.filter(x=>x!==b.dataset.p);
+  else if(act==="pHide" && p){ dashPull(L, p); L.hide.push(p); toast(`Hid ${dashName(el)}. It's in the tray at the bottom if you want it back.`); }
+  else if(act==="pShow"){ L.hide = L.hide.filter(x=>x!==b.dataset.p); L.rows.push({h:null, items:[{p:b.dataset.p, f:1}]}); }
   else if(act==="dashReset"){ delete S.dashLay; save(); applyDash(); toast("Layout reset."); return; }
   dashSave(L);
 }
-// drag the ⠿ handle to move a panel (mouse or finger)
+// ---- drag a divider: the widget on one side grows, the one on the other side shrinks
+let dashSp = null;
+document.addEventListener("pointerdown", e=>{
+  const s = e.target.closest && e.target.closest("#tab-dash .dsx, #tab-dash .dsy"); if(!s || (isPhone() && !dashEdit)) return;
+  e.preventDefault();
+  const L = dashLay();
+  if(s.classList.contains("dsx")){
+    const row = s.parentElement, ri = +row.dataset.ri, a = s.previousElementSibling, b = s.nextElementSibling;
+    dashSp = {kind:"x", L, ri, x0:e.clientX, ia:+s.dataset.a, ib:+s.dataset.b, a, b, wa:a.getBoundingClientRect().width, wb:b.getBoundingClientRect().width};
+    if(!L.rows[ri].h){ L.rows[ri].h = Math.round(row.getBoundingClientRect().height); row.style.height = L.rows[ri].h + "px"; row.classList.add("fixed"); }
+  } else {
+    const top = s.previousElementSibling, nx = s.nextElementSibling, bot = nx && nx.classList.contains("dashrow") ? nx : null;
+    const ht = top.getBoundingClientRect().height, hb = bot ? bot.getBoundingClientRect().height : 0;
+    dashSp = {kind:"y", L, y0:e.clientY, top, bot, rt:+top.dataset.ri, rb: bot ? +bot.dataset.ri : -1, ht, hb};
+    top.style.height = ht + "px"; top.classList.add("fixed");
+    if(bot){ bot.style.height = hb + "px"; bot.classList.add("fixed"); }
+  }
+  dashSp.s = s; s.classList.add("on"); document.body.classList.add("dashsizing", dashSp.kind==="x" ? "sx" : "sy");
+});
+document.addEventListener("pointermove", e=>{
+  const D = dashSp; if(!D) return;
+  if(D.kind==="x"){
+    const mn = dashMinW(), tot = D.wa + D.wb, wa = Math.max(mn, Math.min(tot - mn, D.wa + e.clientX - D.x0));
+    const it = D.L.rows[D.ri].items, fs = it[D.ia].f + it[D.ib].f;
+    it[D.ia].f = fs * wa / tot; it[D.ib].f = fs - it[D.ia].f;
+    D.a.style.flex = `${it[D.ia].f} 1 0`; D.b.style.flex = `${it[D.ib].f} 1 0`;
+    dashFitSoon([D.a, D.b]);
+  } else {
+    let ht = Math.max(DASH_MIN_H, D.ht + e.clientY - D.y0), hb = D.hb;
+    if(D.bot){ ht = Math.min(ht, D.ht + D.hb - DASH_MIN_H); hb = D.ht + D.hb - ht; D.L.rows[D.rb].h = Math.round(hb); D.bot.style.height = hb + "px"; }
+    D.L.rows[D.rt].h = Math.round(ht); D.top.style.height = ht + "px";
+    dashFitSoon([...D.top.children, ...(D.bot ? [...D.bot.children] : [])].filter(x=>x.classList.contains("panel")));
+  }
+});
+const dashSpEnd = ()=>{
+  const D = dashSp; if(!D) return; dashSp = null;
+  D.s.classList.remove("on"); document.body.classList.remove("dashsizing", "sx", "sy");
+  dashSave(D.L);
+};
+document.addEventListener("pointerup", dashSpEnd);
+document.addEventListener("pointercancel", dashSpEnd);
+document.addEventListener("dblclick", e=>{
+  const s = e.target.closest && e.target.closest("#tab-dash .dsx, #tab-dash .dsy"); if(!s) return;
+  const L = dashLay();
+  if(s.classList.contains("dsx")){ const it = L.rows[+s.parentElement.dataset.ri].items, a = it[+s.dataset.a], b = it[+s.dataset.b], m = (a.f + b.f)/2; a.f = b.f = m; toast("Evened out."); }
+  else { L.rows[+s.previousElementSibling.dataset.ri].h = null; toast("Back to natural height."); }
+  dashSave(L);
+});
+// ---- move a widget (Edit layout): drag ⠿ onto another widget. Its left or right edge = beside it, top or bottom = its own row above or below.
+let dashMv = null;
+const dashZoneClear = () => document.querySelectorAll("#tab-dash .dropL, #tab-dash .dropR, #tab-dash .dropT, #tab-dash .dropB").forEach(x=>x.classList.remove("dropL","dropR","dropT","dropB"));
 document.addEventListener("pointerdown", e=>{
   const hd = e.target.closest && e.target.closest(".pdrag"); if(!hd || !dashEdit) return;
-  e.preventDefault(); dashDrag = hd.closest("[data-pid]"); dashDrag.classList.add("dragging");
+  e.preventDefault(); const el = hd.closest("[data-pid]"); dashMv = {el, over:null, zone:null}; el.classList.add("dragging");
 });
 document.addEventListener("pointermove", e=>{
-  if(!dashDrag) return;
-  const t = document.elementFromPoint(e.clientX, e.clientY), over = t && t.closest && t.closest("#tab-dash .dash > [data-pid]");
-  if(!over || over===dashDrag) return;
-  const g = dashGrid(), kids = [...g.children];
-  g.insertBefore(dashDrag, kids.indexOf(over) > kids.indexOf(dashDrag) ? over.nextSibling : over);
+  const M = dashMv; if(!M) return;
+  const t = document.elementFromPoint(e.clientX, e.clientY), over = t && t.closest && t.closest("#tab-dash .dashrow > .panel");
+  dashZoneClear(); M.over = null;
+  if(!over || over===M.el) return;
+  const r = over.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+  let zone = x < .3 ? "L" : x > .7 ? "R" : y < .5 ? "T" : "B";
+  const row = over.parentElement, n = row.querySelectorAll(":scope > .panel").length - (M.el.parentElement===row ? 1 : 0);
+  if((zone==="L" || zone==="R") && n >= dashMaxRow()) zone = y < .5 ? "T" : "B";   // that row is full
+  M.over = over; M.zone = zone; over.classList.add("drop" + zone);
 });
-const dashDrop = ()=>{
-  if(!dashDrag) return; dashDrag.classList.remove("dragging"); dashDrag = null;
-  const L = dashLay(); L.order = [...dashGrid().querySelectorAll(":scope > [data-pid]")].map(x=>x.dataset.pid); dashSave(L);
+const dashMvEnd = ()=>{
+  const M = dashMv; if(!M) return; dashMv = null; M.el.classList.remove("dragging"); dashZoneClear();
+  if(!M.over) return;
+  const L = dashLay(), p = M.el.dataset.pid, q = M.over.dataset.pid;
+  const old = L.rows.find(r=>r.items.some(it=>it.p===p)), f0 = old ? old.items.find(it=>it.p===p).f : 1;
+  dashPull(L, p);
+  const ri = L.rows.findIndex(r=>r.items.some(it=>it.p===q)); if(ri<0) return;
+  const row = L.rows[ri], k = row.items.findIndex(it=>it.p===q);
+  if(M.zone==="L" || M.zone==="R"){ const avg = row.items.reduce((s,it)=>s+it.f, 0) / row.items.length; row.items.splice(M.zone==="L" ? k : k+1, 0, {p, f:avg}); }
+  else L.rows.splice(M.zone==="T" ? ri : ri+1, 0, {h:null, items:[{p, f:f0}]});
+  dashSave(L);
 };
-document.addEventListener("pointerup", dashDrop);
-// resize: drag the corner grip. Width snaps to whole columns, height is free.
-let dashRs = null;
-document.addEventListener("pointerdown", e=>{
-  const gr = e.target.closest && e.target.closest(".pgrip"); if(!gr || !dashEdit) return;
-  e.preventDefault(); const el = gr.closest("[data-pid]"), g = dashGrid(), r = el.getBoundingClientRect(), cs = getComputedStyle(g);
-  const cols = dashCols(g), gap = parseFloat(cs.columnGap)||12, colW = (g.clientWidth - gap*(cols-1)) / cols;
-  dashRs = {el, x0:e.clientX, y0:e.clientY, w0:r.width, h0:r.height, cols, gap, colW, w:Math.round((r.width+gap)/(colW+gap)), h:null};
-  el.classList.add("resizing");
-});
-document.addEventListener("pointermove", e=>{
-  if(!dashRs) return; const R = dashRs;
-  R.w = Math.max(1, Math.min(R.cols, Math.round((R.w0 + e.clientX - R.x0 + R.gap) / (R.colW + R.gap))));
-  R.el.style.gridColumn = R.w>1 ? `span ${R.w}` : "";
-  if(Math.abs(e.clientY - R.y0) > 6){ R.h = Math.max(120, Math.round(R.h0 + e.clientY - R.y0)); R.el.style.height = R.h + "px"; R.el.classList.add("fixedh"); }
-});
-const dashRsEnd = ()=>{
-  if(!dashRs) return; const R = dashRs; dashRs = null; R.el.classList.remove("resizing");
-  const L = dashLay(), p = R.el.dataset.pid, old = dashSz(L.size[p], 99);
-  L.size[p] = {w:R.w, h: R.h || old.h || null}; dashSave(L);
-};
-document.addEventListener("pointerup", dashRsEnd);
-document.addEventListener("pointercancel", dashRsEnd);
-document.addEventListener("dblclick", e=>{
-  const gr = e.target.closest && e.target.closest(".pgrip"); if(!gr || !dashEdit) return;
-  const L = dashLay(); delete L.size[gr.closest("[data-pid]").dataset.pid]; dashSave(L); toast("Size reset.");
-});
+document.addEventListener("pointerup", dashMvEnd);
+document.addEventListener("pointercancel", dashMvEnd);
 addEventListener("resize", ()=>{ if($("tab-dash").classList.contains("on")) applyDash(); });
-document.addEventListener("pointercancel", dashDrop);
 function setWidget(on){
   if(on) showTab("dash");
   S.widget = on; save();
@@ -4539,7 +4650,7 @@ document.addEventListener("click", e=>{
     case "fillLast": { const L = sbLast(); openBlk(L.d, L.i, L.i, false); break; }
     case "widget": setWidget(!S.widget); break;
     case "dashEdit": dashEdit = !dashEdit; document.body.classList.toggle("dashedit", dashEdit); applyDash();
-      if(dashEdit) toast("Drag ⠿ to move a widget and the corner ◢ to resize it. Hide tucks one away. Tap Done when finished."); break;
+      if(dashEdit) toast("Drag the gaps between widgets to resize them. Drag ⠿ onto another widget's side, top or bottom to move it. Tap Done when finished."); break;
     case "pMove": case "pHide": case "pShow": case "dashReset": dashAct(b.dataset.act, b); break;
     case "blkRepeat": {
       const rg = repeatGap(); if(!rg) break; const t = today();
