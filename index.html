@@ -610,6 +610,27 @@ a.btn{text-decoration:none}
 .fcsec{align-self:flex-start;font-size:11px;letter-spacing:.4px;padding:1px 7px;border-radius:4px;border:1px solid var(--line);color:var(--muted)}
 .fc:focus-visible .fcf,.fc:focus-visible .fcb{outline:2px solid var(--accent)}
 .fcbtns{margin-bottom:6px} .fcbtns .btn{flex:1}
+/* answers as a tidy list */
+.fca{font-family:var(--serif);font-size:17px;line-height:1.45;margin:8px 0;overflow-wrap:anywhere;flex:1;white-space:pre-wrap}
+.alist{list-style:none;margin:0;padding:0;white-space:normal}
+.alist li{padding:5px 0;border-bottom:1px dashed var(--line)}
+.alist li:last-child{border-bottom:0}
+.alist b{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-weight:700;color:var(--accent)}
+/* matching game */
+.mt{margin:4px 0 10px}
+.mtq{font-family:var(--serif);font-size:16px;line-height:1.4;margin:0 0 4px}
+.mtinfo{display:block;color:var(--muted);font-size:12.5px;margin-bottom:10px}
+.mtgrid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:8px}
+.mtcol{display:flex;flex-direction:column;gap:8px}
+.mtb{border:2px solid var(--line);background:var(--panel2);color:var(--text);border-radius:12px;padding:10px 10px;font:inherit;font-size:14px;line-height:1.3;text-align:left;cursor:pointer;min-height:46px;overflow-wrap:anywhere;transition:border-color .15s,background .15s}
+.mtcol:first-child .mtb{font-weight:700}
+.mtb.sel{border-color:var(--accent);background:var(--tint2)}
+.mtb.ok{border-color:#22a35a;background:color-mix(in srgb,#22a35a 16%,var(--panel2));opacity:.55;cursor:default}
+.mtb.bad{border-color:#e04848;background:color-mix(in srgb,#e04848 16%,var(--panel2));animation:mtshake .3s}
+@keyframes mtshake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.mtdone{text-align:center;padding:18px 0 6px}
+.mtdone b{display:block;font-size:20px;margin-bottom:4px}
+@media (prefers-reduced-motion:reduce){ .mtb.bad{animation:none} }
 .fcdone{margin:4px 0}
 .fcmore{margin-top:10px;border-top:1px solid var(--line);padding-top:2px}
 #fcForm textarea,#fcForm input{display:block;width:100%;margin-top:4px;padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);box-sizing:border-box;font:inherit}
@@ -760,7 +781,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;box
   .mseg{display:flex}
   /* Cards: one big card at a time */
   #tab-cards .fcf, #tab-cards .fcb{min-height:min(52vh,420px);padding:22px 20px 16px;border-radius:20px}
-  #tab-cards .fcf p, #tab-cards .fcb p{font-size:20px;display:flex;align-items:center}
+  #tab-cards .fcf p{font-size:20px;display:flex;align-items:center}
+  #tab-cards .fca{font-size:18px}
+  #tab-cards .mtb{font-size:15px;min-height:52px}
   #tab-cards .fcbtns{position:sticky;bottom:calc(72px + env(safe-area-inset-bottom));gap:10px}
   #tab-cards .fcbtns .btn{padding:16px 10px;font-size:17px;border-radius:14px}
   #tab-cards .fc.fcnew{animation:fcin .28s var(--ease) both}
@@ -3094,7 +3117,7 @@ function renderSb(){
   $("sbWhen").textContent = `Card ${sb.i+1} of ${sb.q.length} · then fill in your time`;
   $("sbBody").innerHTML = `<div class="fc${sb.flip ? " flip" : ""}" data-act="sbFlip" role="button" aria-label="Flip the card">
       <div class="fcin"><div class="fcf">${tag}<p>${esc(c.q)}</p><small>Tap the card to flip it</small></div>
-      <div class="fcb">${tag}<p>${esc(c.a)}</p><small>Answer</small></div></div></div>
+      <div class="fcb">${tag}<div class="fca">${ansHtml(c.a)}</div><small>Answer</small></div></div></div>
     <div class="row fcbtns">${sb.flip ? `<button class="btn" data-act="sbMiss">✗ Missed it</button><button class="btn primary" data-act="sbGot">✓ Got it</button>` : `<button class="btn primary" data-act="sbFlip">Show answer</button>`}</div>
     <small class="sub"><button class="linkbtn" data-act="sbNext">Skip the cards</button></small>`;
   setTimeout(()=>{ const b = document.querySelector("#sbBody .fcbtns .btn.primary"); if(b) b.focus(); }, 30);
@@ -3182,6 +3205,66 @@ function itGuideHtml(){
     <div class="row"><a class="btn sm primary" href="${X.url}" target="_blank" rel="noopener">▶ Open the ${X.name} videos</a></div>`;
 }
 // ---- flashcards: "Got it" sends a card further out (1, 3, 7, 14, 30 days); "Missed it" brings it back this round and tomorrow
+// Split an answer like "SSH = 22 · RDP = 3389" (or one item per line) into its items.
+// Pieces after a " · " with no "=" belong to the item before them ("Private = 10.x · 172.16–31.x").
+function ansItems(a){
+  const out = [];
+  String(a||"").split(/\r?\n/).forEach(line=>{
+    const parts = line.split(" · ").map(t=>t.trim()).filter(Boolean); let prev = null;
+    parts.forEach(t=>{
+      const k = t.indexOf(" = "), c = t.indexOf(": ");
+      if(k>0){ prev = {l:t.slice(0,k).trim(), r:t.slice(k+3).trim()}; out.push(prev); }
+      else if(c>0 && c<=14 && parts.length===1 && !/^(trick|tip|note|example)/i.test(t)){ prev = {l:t.slice(0,c).trim(), r:t.slice(c+2).trim()}; out.push(prev); }
+      else if(prev){ prev.r += ", " + t; }
+      else { out.push({t}); }
+    });
+  });
+  return out;
+}
+function ansHtml(a){
+  const it = ansItems(a); if(it.length<2) return esc(a);
+  return `<ul class="alist">${it.map(x=>x.t!==undefined ? `<li>${esc(x.t)}</li>` : `<li><b>${esc(x.l)}</b> = ${esc(x.r)}</li>`).join("")}</ul>`;
+}
+// Matching: a card with 3 or more "X = Y" items is played by tapping each X and then its Y, 5 pairs at a time.
+const MT_PAGE = 5;
+let fcM = null;
+const shuffle = a => { a = a.slice(); for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+function mtMake(c){
+  const pairs = shuffle(ansItems(c.a).filter(x=>x.l!==undefined));   // new groups every time, so the order can't be learned instead
+  if(pairs.length<3) return null;
+  const pages = []; for(let i=0;i<pairs.length;i+=MT_PAGE) pages.push(pairs.slice(i, i+MT_PAGE));
+  if(pages.length>1 && pages[pages.length-1].length<3){ const last = pages.pop(); pages[pages.length-1].push(...last); }   // no tiny last page
+  return {id:c.id, pages, total:pairs.length, p:0, rights:shuffle(pages[0].map((x,i)=>i)), sel:null, ok:new Set(), slips:0, bad:null, done:false, asCard:false};
+}
+function mtHtml(c){
+  const m = fcM, tag = c.sec ? `<span class="fcsec">${esc(c.sec)}</span> ` : "";
+  if(m.done){
+    const got = m.slips <= Math.floor(m.total/5);
+    return `<div class="mt mtdone"><b>${got ? "✓ All matched" : "Matched, with a few slips"}</b>
+      <small class="sub">${m.slips ? `${m.slips} wrong tap${m.slips>1?"s":""}.` : "No wrong taps."} ${got ? "" : "It comes back tomorrow."}</small>
+      <div class="row fcbtns" style="margin-top:14px"><button class="btn primary" data-act="mtNext" data-got="${got?1:0}">Next card →</button></div></div>`;
+  }
+  const pg = m.pages[m.p], L = pg.map((x,i)=>`<button class="mtb${m.ok.has(i)?" ok":""}${m.sel&&m.sel.s==="l"&&m.sel.i===i?" sel":""}${m.bad&&m.bad.s==="l"&&m.bad.i===i?" bad":""}" data-act="mtPick" data-s="l" data-i="${i}"${m.ok.has(i)?" disabled":""}>${esc(x.l)}</button>`).join("");
+  const R = m.rights.map(i=>`<button class="mtb${m.ok.has(i)?" ok":""}${m.sel&&m.sel.s==="r"&&m.sel.i===i?" sel":""}${m.bad&&m.bad.s==="r"&&m.bad.i===i?" bad":""}" data-act="mtPick" data-s="r" data-i="${i}"${m.ok.has(i)?" disabled":""}>${esc(pg[i].r)}</button>`).join("");
+  return `<div class="mt"><p class="mtq">${tag}${esc(c.q)}</p>
+    <small class="mtinfo">Tap one on the left, then its match on the right${m.pages.length>1 ? ` · part ${m.p+1} of ${m.pages.length}` : ""}</small>
+    <div class="mtgrid"><div class="mtcol">${L}</div><div class="mtcol">${R}</div></div>
+    <small class="sub" style="display:block;margin-top:10px"><button class="linkbtn" data-act="mtCard">Show it as a flip card instead</button></small></div>`;
+}
+function mtPick(s, i){
+  const m = fcM; if(!m || m.done || m.ok.has(i)) return;
+  m.bad = null;
+  if(!m.sel || m.sel.s===s){ m.sel = {s, i}; return renderCards(); }   // first tap, or changed your mind on the same side
+  const other = m.sel; m.sel = null;
+  const pg = m.pages[m.p], li = s==="l" ? i : other.i, ri = s==="r" ? i : other.i;
+  if(li===ri || pg[li].r===pg[ri].r){ m.ok.add(li); m.ok.add(ri); }
+  else { m.slips++; m.bad = {s, i}; setTimeout(()=>{ if(fcM===m && m.bad){ m.bad = null; renderCards(); } }, 450); }
+  if(m.ok.size===pg.length){
+    if(m.p+1<m.pages.length){ m.p++; m.ok = new Set(); m.rights = shuffle(m.pages[m.p].map((x,k)=>k)); }
+    else m.done = true;
+  }
+  renderCards();
+}
 let fcQ = null, fcFlip = false, fcPractice = false, fcEditing = null, fcRound = {got:0, miss:0};
 const fcOf = id => lrCards().find(c=>c.id===id);
 const fcDue = () => lrCards().filter(c=>(c.due||"")<=today());
@@ -3192,7 +3275,7 @@ function fcStart(practice){
 }
 function fcAnswer(got){
   const c = fcOf(fcQ && fcQ[0]); if(!c) return;
-  fcQ.shift(); fcFlip = false; c.seen = (c.seen||0) + 1;
+  fcQ.shift(); fcFlip = false; fcM = null; c.seen = (c.seen||0) + 1;
   if(got){ fcRound.got++; if(!fcPractice){ const b = c.box||1; c.due = shiftDate(today(), FC_INT[b]); c.box = Math.min(5, b+1); } }
   else { fcRound.miss++; c.miss = (c.miss||0) + 1; if(!fcPractice){ c.box = 1; c.due = shiftDate(today(), 1); } fcQ.push(c.id); }
   save(); renderBrain();
@@ -3233,9 +3316,13 @@ function renderCards(){
     fcPractice = false; fcQ = null;
   } else {
     const tag = c.sec ? `<span class="fcsec">${esc(c.sec)}</span>` : "";
+    if(!fcM || fcM.id!==c.id) fcM = mtMake(c) || {id:c.id, asCard:true};
+    if(!fcM.asCard){
+      $("fcStudy").innerHTML = mtHtml(c) + `<small class="sub">${fcQ.length} left in this round${fcPractice ? ` · practice round · <button class="linkbtn" data-act="fcStop">stop</button>` : ""}</small>`;
+    } else
     $("fcStudy").innerHTML = `<div class="fc${fcFlip ? " flip" : ""}" data-act="fcFlip" role="button" tabindex="0" aria-label="Flip the card">
         <div class="fcin"><div class="fcf">${tag}<p>${esc(c.q)}</p><small>Tap the card to flip it</small></div>
-        <div class="fcb">${tag}<p>${esc(c.a)}</p><small>Answer</small></div></div></div>
+        <div class="fcb">${tag}<div class="fca">${ansHtml(c.a)}</div><small>Answer</small></div></div></div>
       <div class="row fcbtns">${fcFlip ? `<button class="btn" data-act="fcMiss">✗ Missed it</button><button class="btn primary" data-act="fcGot">✓ Got it</button>` : `<button class="btn primary" data-act="fcFlip">Show answer</button>`}</div>
       <small class="sub">${fcQ.length} left in this round${fcPractice ? ` · practice round: doesn't change when cards come back · <button class="linkbtn" data-act="fcStop">stop</button>` : ""}</small>`;
   }
@@ -4439,6 +4526,9 @@ document.addEventListener("click", e=>{
     case "lrCopy": lrCopy(); break;
     case "lrExam": LR().exam = id; fcQ = null; save(); renderBrain(); break;
     case "fcFlip": fcFlip = !fcFlip; renderCards(); break;
+    case "mtPick": mtPick(b.dataset.s, +b.dataset.i); break;
+    case "mtCard": if(fcM){ fcM.asCard = true; fcFlip = false; renderCards(); } break;
+    case "mtNext": { const got = b.dataset.got==="1"; fcM = null; fcAnswer(got); break; }
     case "fcGot": fcAnswer(true); break;
     case "fcMiss": fcAnswer(false); break;
     case "fcPracticeAll": fcStart(true); renderCards(); break;
